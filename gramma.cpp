@@ -321,9 +321,11 @@ void block_stmt(int funtionPos, int upRange)
     else if (symId == WHILE_KW)
       while_stmt(funtionPos, rangePos);
     else if (symId == BREAK_KW)
-      break_stmt(funtionPos, rangePos);
+      error(99,token);
+      // break_stmt(funtionPos, rangePos);
     else if (symId == CONTINUE_KW)
-      continue_stmt(funtionPos, rangePos);
+      error(99,token);
+      // continue_stmt(funtionPos, rangePos);
     else if (symId == RETURN_KW)
       return_stmt(funtionPos, rangePos);
     else if (symId == SEMICOLON)
