@@ -466,28 +466,26 @@ void while_stmt(int funtionPos, int rangePos)
 {
   int retType = 0;
   //br(0)
-  Fmap[funtionPos].instructions.push_back(0x41);
+  F_instruction(funtionPos,0x41);
   int whilePos = Fmap[funtionPos].instructions.size();
   pushIns(0, Fmap[funtionPos].instructions);
-  int whileNum = ++Fmap[funtionPos].insNum;
+  int whileNum = Fmap[funtionPos].insNum;
   getsym();
   expr(funtionPos, rangePos, &retType); // {
                                         //brtrue(1)
-  Fmap[funtionPos].instructions.push_back(0x43);
+  F_instruction(funtionPos,0x43);
   pushIns(1, Fmap[funtionPos].instructions);
-  Fmap[funtionPos].insNum++;
   //br(0)0等待替换，在符号表中添加continueNum;
-  Fmap[funtionPos].instructions.push_back(0x41);
+  F_instruction(funtionPos,0x41);
   int waitPos = Fmap[funtionPos].instructions.size();
   pushIns(0, Fmap[funtionPos].instructions);
-  int tempNum = ++Fmap[funtionPos].insNum;
+  int tempNum = Fmap[funtionPos].insNum;
   // Lmap[rangePos].continueNum = tempNum;
 
   block_stmt(funtionPos, rangePos);
   //添加循环br(-?)
-  Fmap[funtionPos].instructions.push_back(0x41);
-  pushIns(whileNum - Fmap[funtionPos].insNum - 1, Fmap[funtionPos].instructions);
-  Fmap[funtionPos].insNum++;
+  F_instruction(funtionPos,0x41);
+  pushIns(whileNum - Fmap[funtionPos].insNum, Fmap[funtionPos].instructions);
   //修改开头等待替换的0
   unsigned char str[5];
   memset(str, 0, sizeof(str));
