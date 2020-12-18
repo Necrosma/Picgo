@@ -581,7 +581,7 @@ void expr(int funtionPos, int rangePos, int *retType)
       else
         F_instruction(funtionPos,0x32);
         // Fmap[funtionPos].instructions.push_back(0x32);
-      Fmap[funtionPos].insNum++;
+      // Fmap[funtionPos].insNum++;
       F_instruction(funtionPos,0x39);
       // Fmap[funtionPos].instructions.push_back(0x39);
       // Fmap[funtionPos].insNum++;
