@@ -408,14 +408,13 @@ void if_stmt(int funtionPos, int rangePos)
   getsym();
   expr(funtionPos, rangePos, &retType); // {
   //brtrue(1)
-  Fmap[funtionPos].instructions.push_back(0x43);
+  F_instruction(funtionPos,0x43);
   pushIns(1, Fmap[funtionPos].instructions);
-  Fmap[funtionPos].insNum++;
   //br(0)0等待替换;
-  Fmap[funtionPos].instructions.push_back(0x41);
+  F_instruction(funtionPos,0x41);
   int waitPos = Fmap[funtionPos].instructions.size();
   pushIns(0, Fmap[funtionPos].instructions);
-  int ifLowNum = ++Fmap[funtionPos].insNum;
+  int ifLowNum = Fmap[funtionPos].insNum;
 
   block_stmt(funtionPos, rangePos);
   int ifHighNum = Fmap[funtionPos].insNum;
@@ -424,10 +423,10 @@ void if_stmt(int funtionPos, int rangePos)
   if (symId == ELSE_KW)
   {
     //br(0)0等待替换;
-    Fmap[funtionPos].instructions.push_back(0x41);
+    F_instruction(funtionPos,0x41);
     int waitPos = Fmap[funtionPos].instructions.size();
     pushIns(0, Fmap[funtionPos].instructions);
-    int elseLowNum = ++Fmap[funtionPos].insNum;
+    int elseLowNum = Fmap[funtionPos].insNum;
     ifHighNum++;
 
     getsym();
@@ -459,9 +458,8 @@ void if_stmt(int funtionPos, int rangePos)
     Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
   }
   //结尾添加一个br(0)
-  Fmap[funtionPos].instructions.push_back(0x41);
+  F_instruction(funtionPos,0x41);
   pushIns(0, Fmap[funtionPos].instructions);
-  Fmap[funtionPos].insNum++;
 }
 /* 'while' expr block_stmt */
 void while_stmt(int funtionPos, int rangePos)
