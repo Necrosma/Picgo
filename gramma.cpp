@@ -96,10 +96,10 @@ typedef struct LOCAL
     存放待填写的breaks，first是Fmap[funtionPos].instructions[insPos]，代码待填写的位置
     second是当前指令数，用于被insNum减，得到放入first位置的值
     */
-  vector<pair<int, int>> breaks;
-  bool is_while;
-  int continueNum; //TODO:初始化
-  LOCAL(int funtionPos, int upRange) : vars(), postionInFuntion(), funtionPos(funtionPos), upRange(upRange), breaks(), is_while(false), continueNum() {}
+  // vector<pair<int, int>> breaks;
+  // bool is_while;
+  // int continueNum; //TODO:初始化
+  LOCAL(int funtionPos, int upRange) : vars(), postionInFuntion(), funtionPos(funtionPos), upRange(upRange) {}
 } Local;
 vector<Local> Lmap;
 typedef struct FUNTION
@@ -609,7 +609,7 @@ void while_stmt(int funtionPos, int rangePos)
   int waitPos = Fmap[funtionPos].instructions.size();
   pushIns(0, Fmap[funtionPos].instructions);
   int tempNum = ++Fmap[funtionPos].insNum;
-  Lmap[rangePos].continueNum = tempNum;
+  // Lmap[rangePos].continueNum = tempNum;
 
   block_stmt(funtionPos, rangePos);
   //添加循环br(-?)
@@ -625,62 +625,16 @@ void while_stmt(int funtionPos, int rangePos)
     Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
   }
   //修改break等待替换的0
-  for (int i = 0; i < Lmap[rangePos].breaks.size(); i++)
-  {
-    unsigned char str[5];
-    memset(str, 0, sizeof(str));
-    intToFourBits(Fmap[funtionPos].insNum - Lmap[rangePos].breaks[i].second, str);
-    for (int i = 0; i < 4; i++)
-    {
-      Fmap[funtionPos].instructions[Lmap[rangePos].breaks[i].first + i] = str[4 - i];
-    }
-  }
-}
-/* 'break' ';' */
-void break_stmt(int funtionPos, int rangePos)
-{
-  getsym(); // ;
-  check(SEMICOLON);
-  getsym();
-
-  //check inwhile
-  int tempRangePos = rangePos;
-  while (!Lmap[tempRangePos].is_while)
-  {
-    if (Lmap[tempRangePos].upRange != -1)
-      tempRangePos = Lmap[tempRangePos].upRange;
-    else{
-      puts("break error");
-      error(99, token);
-    }
-  }
-  //br(0)0等待替换
-  Fmap[funtionPos].instructions.push_back(0x41);
-  int waitPos = Fmap[funtionPos].instructions.size();
-  pushIns(0, Fmap[funtionPos].instructions);
-  int tempNum = ++Fmap[funtionPos].insNum;
-  Lmap[tempRangePos].breaks.push_back(pair<int, int>(waitPos, tempNum));
-}
-/* 'continue' ';' */
-void continue_stmt(int funtionPos, int rangePos)
-{
-  getsym(); // ;
-  check(SEMICOLON);
-  getsym();
-
-  //check inwhile
-  int tempRangePos = rangePos;
-  while (!Lmap[tempRangePos].is_while)
-  {
-    if (Lmap[tempRangePos].upRange != -1)
-      tempRangePos = Lmap[tempRangePos].upRange;
-    else
-      error(99, token);
-  }
-  //返回到开头
-  Fmap[funtionPos].instructions.push_back(0x41);
-  Fmap[funtionPos].insNum++;
-  pushIns(Lmap[tempRangePos].continueNum - Fmap[funtionPos].insNum, Fmap[funtionPos].instructions);
+  // for (int i = 0; i < Lmap[rangePos].breaks.size(); i++)
+  // {
+  //   unsigned char str[5];
+  //   memset(str, 0, sizeof(str));
+  //   intToFourBits(Fmap[funtionPos].insNum - Lmap[rangePos].breaks[i].second, str);
+  //   for (int i = 0; i < 4; i++)
+  //   {
+  //     Fmap[funtionPos].instructions[Lmap[rangePos].breaks[i].first + i] = str[4 - i];
+  //   }
+  // }
 }
 /* 'return' expr? ';' */
 void return_stmt(int funtionPos, int rangePos)
@@ -1482,12 +1436,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     check(L_PAREN);
     //int
     getsym();
-    // if(!strcmp(token,"i")) getsym();
-    // else {
-    //   getsym();
-    //   getsym();
-    //   getsym();
-    // }
     expr(funtionPos, rangePos, &retT);
     //')'
     check(R_PAREN);
@@ -1592,33 +1540,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     puts("as is not implement");
     error(99,token);
   } 
-  // if(symId == AS_KW){
-  //   getsym();
-  //   check(IDENT); // ty
-  //   string str;
-  //   if (!strcmp(token, "int") || !strcmp(token, "double") || !strcmp(token, "void"))
-  //       str = token;
-  //   else
-  //       error(99, token);
-  //   if(str=="int"){
-  //       if(*retType==2){
-  //           //ftoi
-  //           Fmap[funtionPos].instructions.push_back(0x37);
-  //           Fmap[funtionPos].insNum++;
-  //       }
-  //       else if(*retType!=1) error(99,token);
-  //   }
-  //   else if(str=="double"){
-  //       if(*retType==1){
-  //           //itof
-  //           Fmap[funtionPos].instructions.push_back(0x36);
-  //           Fmap[funtionPos].insNum++;
-  //       }
-  //       else if(*retType!=2) error(99,token);
-  //   }
-  //   else error(99,token);
-  //   getsym();
-  // }
 }
 
 // expr (',' expr)* [非空才进入]

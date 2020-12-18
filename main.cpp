@@ -15,7 +15,7 @@ int main(int argc,char** argv)
     
     streampos pos =src.tellg();
     src.seekg(0,ios::end);
-    if(src.tellg()<24) return 111;
+    if(src.tellg()<24) return -1;
     src.seekg(pos);  
 
     tokens.open("tokens.txt", ios::out);
