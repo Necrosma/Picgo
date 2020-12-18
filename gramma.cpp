@@ -981,6 +981,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       getsym(); // call_param_list | ')'
       if (symId == R_PAREN)
       {           // 空列表
+        Fmap[funtionPos].instructions.push_back(0x48);
+        pushIns(callFuntionPos, Fmap[funtionPos].instructions);
+        Fmap[funtionPos].insNum++;
         getsym(); // read next
       }
       else
@@ -1770,7 +1773,7 @@ bool analyse()
     }
   }
   string str;
-  puts("=====================");
+  // puts("=====================");
   for (int i = 0; i < instructions.size();i++)
   {
     str += instructions[i];

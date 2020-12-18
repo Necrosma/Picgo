@@ -1,68 +1,58 @@
-fn sqrt(n: double) -> double {
-    let l: double = 0.0;
-    let r: double = n;
-    let mid: double;
-    let mid2: double;
-    while r-l > 0.000001 {
-        mid = (l+r) / 2.0;
-        mid2 = mid*mid;
-        if (mid2 == n) {
-            return mid;
-        }
-        if (mid2 < n) {
-            l = mid;
-        }
-        else {
-            r = mid;
-        }
+fn is_digit(ch: int) -> int {
+    if ch < '0' {
+        return 0;
+    } else if ch > '9' {
+        return 0;
+    } else {
+        return 1;
     }
-    return mid;
 }
 
 
-fn mod(i: int, j: int) -> int {
-    let k: int = (i/j) as double as int;
-    return (i - j*k) as double as int;
+fn is_space(ch: int) -> int {
+    if ch == ' ' {
+        return 1;
+    } else if ch == '\n' {
+        return 1;
+    } else if ch == '\r' {
+        return 1;
+    } else if ch == '\t' {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 
-fn judge_mod(i: int, j: int, sq: int) -> int {
-   if j > sq {
-       return 0;
-   } else if mod(i, j) == 0 {
-       return 0;
-   } else {
-       return 1;
-   }
+fn atoi() -> int {
+    let c: int;
+    let res: int = 0;
+    let neg: int = 0;
+    c = getchar();
+    while is_space(c) {
+        c = getchar();
+    }
+    if c == '-' {
+        neg = 1;
+        c = getchar();
+    }
+    while is_digit(c) {
+        res = res * 10 + (c - '0');
+        c = getchar();
+    }
+    if neg {
+        res = -res;
+    }
+    return res;
 }
 
 
 fn main() -> void {
-    let N: int;
-    let i: int;
-    let j: int;
-    let sq: int;
-    let sqd: double;
-    N = getint();
-    i = 2;
-    while i <= N {
-        if mod(i, 2) != 0 {
-            sqd = sqrt(i as double);
-            sq = sqrt(i as double) as int;
-            if (sqd as int != sq) {
-                putint(-1);
-                putln();
-                return;
-            }
-            j = 2;
-            while judge_mod(i, j, sq) {
-                j = j + 1;
-            }
-            if (j > sq) {
-                putint(i);
-                putln();
-            }
-        }
-        i = i + 1;
+    let count: int;
+    count = getint();
+    while count > 0 {
+        putint(atoi());
+        putln();
+        count = count - 1;
     }
 }

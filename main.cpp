@@ -13,6 +13,11 @@ int main(int argc,char** argv)
     outFile = fopen(argv[3],"wt");
     src.open(argv[1], ios::in);
     
+    streampos pos =src.tellg();
+    src.seekg(0,ios::end);
+    if(src.tellg()<21) return 111;
+    src.seekg(pos);  
+
     tokens.open("tokens.txt", ios::out);
 
     getch();
