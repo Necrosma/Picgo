@@ -322,10 +322,8 @@ void block_stmt(int funtionPos, int upRange)
       while_stmt(funtionPos, rangePos);
     else if (symId == BREAK_KW)
       error(99,token);
-      // break_stmt(funtionPos, rangePos);
     else if (symId == CONTINUE_KW)
       error(99,token);
-      // continue_stmt(funtionPos, rangePos);
     else if (symId == RETURN_KW)
       return_stmt(funtionPos, rangePos);
     else if (symId == SEMICOLON)
@@ -1591,32 +1589,36 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
 
   // as 的部分不管了 TODO
   if(symId == AS_KW){
-    getsym();
-    check(IDENT); // ty
-    string str;
-    if (!strcmp(token, "int") || !strcmp(token, "double") || !strcmp(token, "void"))
-        str = token;
-    else
-        error(99, token);
-    if(str=="int"){
-        if(*retType==2){
-            //ftoi
-            Fmap[funtionPos].instructions.push_back(0x37);
-            Fmap[funtionPos].insNum++;
-        }
-        else if(*retType!=1) error(99,token);
-    }
-    else if(str=="double"){
-        if(*retType==1){
-            //itof
-            Fmap[funtionPos].instructions.push_back(0x36);
-            Fmap[funtionPos].insNum++;
-        }
-        else if(*retType!=2) error(99,token);
-    }
-    else error(99,token);
-    getsym();
-  }
+    puts("as is not implement");
+    error(99,token);
+  } 
+  // if(symId == AS_KW){
+  //   getsym();
+  //   check(IDENT); // ty
+  //   string str;
+  //   if (!strcmp(token, "int") || !strcmp(token, "double") || !strcmp(token, "void"))
+  //       str = token;
+  //   else
+  //       error(99, token);
+  //   if(str=="int"){
+  //       if(*retType==2){
+  //           //ftoi
+  //           Fmap[funtionPos].instructions.push_back(0x37);
+  //           Fmap[funtionPos].insNum++;
+  //       }
+  //       else if(*retType!=1) error(99,token);
+  //   }
+  //   else if(str=="double"){
+  //       if(*retType==1){
+  //           //itof
+  //           Fmap[funtionPos].instructions.push_back(0x36);
+  //           Fmap[funtionPos].insNum++;
+  //       }
+  //       else if(*retType!=2) error(99,token);
+  //   }
+  //   else error(99,token);
+  //   getsym();
+  // }
 }
 
 // expr (',' expr)* [非空才进入]
