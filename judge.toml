@@ -3,5 +3,5 @@
 image = { source = "dockerfile", path = ".", tag = "pascal-lex-example"}
 
 run = [
-    "./c0 $input -o $asm",
+    "./main $input -o $asm",
 ]

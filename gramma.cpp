@@ -1738,10 +1738,17 @@ bool analyse()
     }
   }
   string str;
-  for (int i = 0; i < instructions.size(); i++)
+  puts("=====================");
+  for (int i = 0; i < instructions.size();i++)
   {
-    printf("0x%x\n", instructions[i]);
     str += instructions[i];
+
+    int n = i+1;
+    cout.width(2);
+    cout.fill('0');
+    cout<<hex<<(int)instructions[i];
+    if(!(n%2) && n%16) cout<<' ';
+    if(!(n%16)) cout<<'\n';
   }
   fwrite(str.c_str(), str.size(), 1, outFile);
   return true;
