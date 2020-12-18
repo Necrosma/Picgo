@@ -228,7 +228,7 @@ void function()
       if (!strcmp(token, Fmap[i].name.c_str()))
         error(99, token);
     string tmp = token;
-    printf("Fmap.push: %s\n",token);
+    // printf("Fmap.push: %s\n",token);
     Fmap.push_back(Funtion(token));
   }
 
@@ -280,7 +280,7 @@ void function()
   check(IDENT);
   if (!strcmp(token, "int") || !strcmp(token, "double") || !strcmp(token, "void")){
     Fmap[funtionPos].retType = token;
-    printf("FMAP TYPE: %s\n",Fmap[funtionPos].retType.c_str());
+    // printf("FMAP TYPE: %s\n",Fmap[funtionPos].retType.c_str());
   }
   else
     error(99, token);
@@ -650,8 +650,10 @@ void break_stmt(int funtionPos, int rangePos)
   {
     if (Lmap[tempRangePos].upRange != -1)
       tempRangePos = Lmap[tempRangePos].upRange;
-    else
+    else{
+      puts("break error");
       error(99, token);
+    }
   }
   //br(0)0等待替换
   Fmap[funtionPos].instructions.push_back(0x41);
@@ -949,7 +951,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       }
       else if (Fmap[callFuntionPos].retType == "int")
       {
-        printf("%d\n", *retType);
+        // printf("%d\n", *retType);
         //找到的函数返回值不是要求的返回值
         if (*retType != 0 && *retType != 1)
           error(99, token);
@@ -961,7 +963,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         //返回调用者想要查看的返回值类型
         if (*retType == 0)
           *retType = 1;
-        puts("222");
       }
       else if (Fmap[callFuntionPos].retType == "double")
       {
@@ -1124,7 +1125,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     // 变量调用 IDENT 注：此时以读了下一个token
     else
     {
-      printf("[LOGGER] 变量调用: %s\n", preToken.c_str());
+      // printf("[LOGGER] 变量调用: %s\n", preToken.c_str());
       //查找变量
       int tempRangePos = rangePos;
       bool local = false, param = false, global = false;

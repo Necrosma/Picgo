@@ -1,35 +1,27 @@
+let i: int = 2;
+
+fn foo() -> int {
+    let i: int = 1;
+    putint(i);
+    putln();
+    return i;
+}
+
+fn bar() -> void {
+    putint(i);
+    putln();
+    i = i + 1;
+}
+
 fn main() -> void {
-
-    let c: int = 0;
-
-    let i: int;
-
-    while c < 10 {
-
-        i = 0;
-
-        while i < 9 - c {
-
-            putchar(32);
-
-            i = i + 1;
-
-        }
-
-        i = 0;
-
-        while i < 2 * c + 1 {
-
-            putchar(42);
-
-            i = i + 1;
-
-        }
-
-        putln();
-
-        c = c + 1;
-
-    }
-
+    let i: int = 1;
+    putint(i);
+    putln();
+    putint(foo());
+    putln();
+    bar();
+    bar();
+    bar();
+    putint(foo());
+    putln();
 }
