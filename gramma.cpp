@@ -12,7 +12,6 @@
 using namespace std;
 
 // 符号表 =============================================
-//TODO:按指令使用情况检查
 uint64_t doubleToRawBits(double x)
 {
   uint64_t bits;
@@ -92,13 +91,6 @@ typedef struct LOCAL
   int funtionPos;
   //父域，-1表示父域为全局变量，其余为Lmap下表
   int upRange;
-  /*
-    存放待填写的breaks，first是Fmap[funtionPos].instructions[insPos]，代码待填写的位置
-    second是当前指令数，用于被insNum减，得到放入first位置的值
-    */
-  // vector<pair<int, int>> breaks;
-  // bool is_while;
-  // int continueNum; //TODO:初始化
   LOCAL(int funtionPos, int upRange) : vars(), postionInFuntion(), funtionPos(funtionPos), upRange(upRange) {}
 } Local;
 vector<Local> Lmap;
@@ -123,7 +115,7 @@ vector<unsigned char> instructions;
 /*===========================================/
 Define
 /===========================================*/
-bool analyse();
+void parse();
 void function();
 void let_decl_stmt(int funtionPos, int rangePos);
 void const_decl_stmt(int funtionPos, int rangePos);
@@ -352,7 +344,6 @@ void block_stmt(int funtionPos, int upRange)
   check(R_BRACE); //stmt尾已读
   getsym();
 }
-
 /* 'const' IDENT ':' ty '=' expr ';' */
 void const_decl_stmt(int funtionPos, int rangePos)
 {
@@ -1593,7 +1584,7 @@ void CallParamList(int funtionPos, int rangePos, int callFuntionPos)
 }
 
 //前提：将所有符号表搞定
-bool analyse()
+void parse()
 { //TODO: 写入文件
   //magic
   instructions.push_back(0x72);
@@ -1603,9 +1594,7 @@ bool analyse()
   //version
   pushIns(1, instructions);
   program();
-  //_start的指令集
-  if (!init_start())
-    return false;
+  init_start(); //_start的指令集
   //Array<GlobalDef>：全局变量常量（全设为0），字符串字面量，函数名
   //Array<GlobalDef>.count
   int globalNum = Gmap.size() + Fmap.size();
@@ -1642,7 +1631,7 @@ bool analyse()
       }
     }
     else{
-      return false;
+      error(99,token);
     }
   }
   //Array<GlobalDef>.item 函数部分
@@ -1683,7 +1672,7 @@ bool analyse()
     else
     {
       printf("Fmap[%d] error: %s\n",i,Fmap[i].retType.c_str());
-      return false;
+      error(99,token);
     }
     //Array<FunctionDef>.item[i].param_slots
     pushIns(Fmap[i].paramSlotNum, instructions);
@@ -1697,8 +1686,8 @@ bool analyse()
       instructions.push_back(Fmap[i].instructions[j]);
     }
   }
+  
   string str;
-  // puts("=====================");
   for (int i = 0; i < instructions.size();i++)
   {
     str += instructions[i];
@@ -1711,5 +1700,4 @@ bool analyse()
     if(!(n%16)) cout<<'\n';
   }
   fwrite(str.c_str(), str.size(), 1, outFile);
-  return true;
 }

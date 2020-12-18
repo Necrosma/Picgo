@@ -25,7 +25,6 @@ using namespace std;
 #define PUTCHAR 16
 #define PUTSTR 17
 #define PUTLN 18
-
 #define PLUS 19     // +
 #define MUL 20      // *
 #define MINUS 21     // -
@@ -60,14 +59,14 @@ string word[] = {"fn", "let", "const", "as", "while", "if", "else", "return", "b
                   "getint","getdouble","getchar","putint","putdouble","putchar","putstr","putln"};
 
 char token[512];
+double num;
+
 int ip;
-string sym = "";
 int symId;
 char ch = ' ';
-double num;
+string sym = "";
 ifstream src;
 ofstream tokens;
-ofstream _gramma;
 FILE *outFile = NULL;
 
 int isLetter()
@@ -96,8 +95,8 @@ int getsym()
   {
     getch();
   }
-  if (ch == 0)
-    return -1;
+  if (ch == 0) return -1;
+
   ip = 0;
   if (isLetter())
   {
@@ -139,7 +138,7 @@ int getsym()
       num = num * 10 + (int)(ch - '0');
       getch();
     }
-    // 小数  TODO 003, 00.2
+    // 小数
     if (ch == '.')
     {
       double bit = 1.0;
@@ -257,14 +256,13 @@ int getsym()
     token[ip] = '\0';
   }
   /** 
-     * CHAR_LITERAL
-     * '\'' ([^'\\] | '\' [\\"'nrt]) '\''
-     */
+   * CHAR_LITERAL
+   */
   else if (ch == '\'')
   {
     getch();
     if (ch == '\\')
-    { //escape_sequence  TODO?
+    { //escape_sequence
       getch();
       if (ch == '\\')
         token[ip++] = (char)92;
@@ -288,7 +286,7 @@ int getsym()
     else
     {
       token[ip] = '\0';
-      error(ESCAPE_QUENCE_ERROR, token); // ' '
+      error(ESCAPE_QUENCE_ERROR, token);
     }
     getch();
     if (ch == '\'')
@@ -303,9 +301,8 @@ int getsym()
     }
   }
   /**
-     * STRING_LITERAL
-     * '"' ([^"\\] | '\' [\\"'nrt])* '"'
-     */
+   * STRING_LITERAL
+   */
   else if (ch == '\"')
   {
     char tempStr[512];
@@ -316,7 +313,7 @@ int getsym()
     while (isChar())
     {
       if (ch == '\\')
-      { //escape_sequence  TODO?
+      { //escape_sequence
         getch();
         if (ch == '\\')
           tempStr[index++] = (char)92;
@@ -351,9 +348,8 @@ int getsym()
     }
   }
   /**
-     * COMMENT
-     * '//' regex(.*) '\n'
-     */
+   * COMMENT
+   */
   else if (ch == '/')
   {
     token[ip++] = ch;
@@ -365,7 +361,7 @@ int getsym()
     if (ch == '/')
     {
       getch();
-      if (ch == '\n') //TODO
+      if (ch == '\n')
         error(COMMENT_LACK_ERROR, token);
       while (ch != '\n')
       {
@@ -373,9 +369,8 @@ int getsym()
       }
       sym = "COMMENT";
       symId = COMMENT;
-      getch(); //TODO
+      getch();
     }
-    // else error(COMMENT_FORMAT_ERROR,token);
   }
   else
   {
@@ -441,7 +436,8 @@ int getsym()
   {
     tokens << sym << ':' << ' ' << token << endl;
   }
-  else
+  else{
     getsym();
+  }
   return 0;
 }
