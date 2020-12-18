@@ -1522,7 +1522,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     getsym();
     expr(funtionPos, rangePos, &retT);
     //')'
-    getsym();
     check(R_PAREN);
     //print.c
     Fmap[funtionPos].instructions.push_back(0x55);

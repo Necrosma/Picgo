@@ -1,25 +1,35 @@
-fn add(a: int, b: int) -> int {
-
-    return a + b;
-
-}
-
-
-
 fn main() -> void {
 
-    let x: int;
+    let c: int = 0;
 
-    let y: int;
+    let i: int;
 
-    let z: int;
+    while c < 10 {
 
-    x = getint();
+        i = 0;
 
-    y = getint();
+        while i < 9 - c {
 
-    z = add(x, y);
+            putchar(32);
 
-    putint(z);
+            i = i + 1;
+
+        }
+
+        i = 0;
+
+        while i < 2 * c + 1 {
+
+            putchar(42);
+
+            i = i + 1;
+
+        }
+
+        putln();
+
+        c = c + 1;
+
+    }
 
 }

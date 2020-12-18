@@ -8,14 +8,13 @@ using namespace std;
 int main(int argc,char** argv)
 {
     // src.open("src.txt", ios::in);
-    src.open(argv[1], ios::in);
-    tokens.open("tokens.txt", ios::out);
     // outFile = fopen("out.txt","wt");
+
     outFile = fopen(argv[3],"wt");
-    if(!src.is_open()){
-        cout << "file open failed" << endl;
-        return -1;
-    }
+    src.open(argv[1], ios::in);
+    
+    tokens.open("tokens.txt", ios::out);
+
     getch();
     getsym();
     // program();
