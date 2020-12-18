@@ -425,7 +425,7 @@ int getsym()
       symId = MUL;
     }
     else{
-      printf("Unmatched char: %c\n",ch);
+      printf("Unmatched char: [%d] '%c'\n",(int)ch,ch);
       error(UNMATCH_ERROR, token);
     }
     token[ip++] = ch;
