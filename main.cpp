@@ -7,9 +7,8 @@
 using namespace std;
 int main(int argc,char** argv)
 {
-  return -1;
-    src.open("src.txt", ios::in);
-    // src.open(argv[1], ios::in);
+    // src.open("src.txt", ios::in);
+    src.open(argv[1], ios::in);
     tokens.open("tokens.txt", ios::out);
     outFile = fopen("out.txt","wt");
     if(!src.is_open()){

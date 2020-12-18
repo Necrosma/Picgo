@@ -424,8 +424,10 @@ int getsym()
       sym = "MUL";
       symId = MUL;
     }
-    else
+    else{
+      printf("Unmatched char: %c\n",ch);
       error(UNMATCH_ERROR, token);
+    }
     token[ip++] = ch;
     token[ip] = '\0';
     getch();
