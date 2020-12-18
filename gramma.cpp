@@ -171,8 +171,8 @@ void function()
   getsym();
   block_stmt(funtionPos, -1);
   //默认ret
-  Fmap[funtionPos].instructions.push_back(0x49);
-  Fmap[funtionPos].insNum++;
+  F_instruction(funtionPos,0x49);
+  
 }
 /* '{' stmt* '}'
 	stmt -> expr_stmt | decl_stmt | if_stmt | while_stmt | return_stmt | block_stmt
@@ -212,9 +212,9 @@ void block_stmt(int funtionPos, int upRange)
       if (retType != 3)
       {
         //popn
-        Fmap[funtionPos].instructions.push_back(0x03);
+        F_instruction(funtionPos,0x03);
         pushIns(1, Fmap[funtionPos].instructions);
-        Fmap[funtionPos].insNum++;
+        
       }
       check(SEMICOLON);
       getsym();
@@ -296,22 +296,22 @@ void const_decl_stmt(int funtionPos, int rangePos)
   if (funtionPos == 0)
   {
     //globa
-    Fmap[funtionPos].instructions.push_back(0x0c);
+    F_instruction(funtionPos,0x0c);
     pushIns(varPos, Fmap[funtionPos].instructions);
   }
   else
   {
     //loca
-    Fmap[funtionPos].instructions.push_back(0x0a);
+    F_instruction(funtionPos,0x0a);
     pushIns(varPos, Fmap[funtionPos].instructions);
   }
-  Fmap[funtionPos].insNum++;
+  
 
   getsym();
   expr(funtionPos, rangePos, &retType); // ;
   //store64
-  Fmap[funtionPos].instructions.push_back(0x17);
-  Fmap[funtionPos].insNum++;
+  F_instruction(funtionPos,0x17);
+  
 
   check(SEMICOLON);
   getsym();
@@ -382,21 +382,21 @@ void let_decl_stmt(int funtionPos, int rangePos)
     if (funtionPos == 0)
     {
       //globa
-      Fmap[funtionPos].instructions.push_back(0x0c);
+      F_instruction(funtionPos,0x0c);
       pushIns(varPos, Fmap[funtionPos].instructions);
     }
     else
     {
       //loca
-      Fmap[funtionPos].instructions.push_back(0x0a);
+      F_instruction(funtionPos,0x0a);
       pushIns(varPos, Fmap[funtionPos].instructions);
     }
-    Fmap[funtionPos].insNum++;
+    
     getsym();
     expr(funtionPos, rangePos, &retType); // ;
     //store64
-    Fmap[funtionPos].instructions.push_back(0x17);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x17);
+    
   }
   check(SEMICOLON);
   getsym();
@@ -513,9 +513,9 @@ void return_stmt(int funtionPos, int rangePos)
   if (symId != SEMICOLON)
   {
     //arga(0)
-    Fmap[funtionPos].instructions.push_back(0x0b);
+    F_instruction(funtionPos,0x0b);
     pushIns(0, Fmap[funtionPos].instructions);
-    Fmap[funtionPos].insNum++;
+    
     //返回值
     int retType;
     if (Fmap[funtionPos].retType == "int")
@@ -526,8 +526,8 @@ void return_stmt(int funtionPos, int rangePos)
       error(99, token);
     expr(funtionPos, rangePos, &retType);
     //store64
-    Fmap[funtionPos].instructions.push_back(0x17);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x17);
+    
   }
   else
   {
@@ -535,8 +535,8 @@ void return_stmt(int funtionPos, int rangePos)
       error(99, token);
   }
   //ret
-  Fmap[funtionPos].instructions.push_back(0x49);
-  Fmap[funtionPos].insNum++;
+  F_instruction(funtionPos,0x49);
+  
   check(SEMICOLON); //TODO
   getsym();
 }
@@ -573,14 +573,14 @@ void expr(int funtionPos, int rangePos, int *retType)
       HighExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
-        // Fmap[funtionPos].instructions.push_back(0x30);
+        // F_instruction(funtionPos,0x30);
       else
         F_instruction(funtionPos,0x32);
-        // Fmap[funtionPos].instructions.push_back(0x32);
-      // Fmap[funtionPos].insNum++;
+        // F_instruction(funtionPos,0x32);
+      // 
       F_instruction(funtionPos,0x39);
-      // Fmap[funtionPos].instructions.push_back(0x39);
-      // Fmap[funtionPos].insNum++;
+      // F_instruction(funtionPos,0x39);
+      // 
       *retType = 4;
     }
     else if (symId == LE)
@@ -588,14 +588,14 @@ void expr(int funtionPos, int rangePos, int *retType)
       getsym();
       HighExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-        Fmap[funtionPos].instructions.push_back(0x30);
+        F_instruction(funtionPos,0x30);
       else
-        Fmap[funtionPos].instructions.push_back(0x32);
-      Fmap[funtionPos].insNum++;
-      Fmap[funtionPos].instructions.push_back(0x3a);
-      Fmap[funtionPos].insNum++;
-      Fmap[funtionPos].instructions.push_back(0x2e);
-      Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x32);
+      
+      F_instruction(funtionPos,0x3a);
+      
+      F_instruction(funtionPos,0x2e);
+      
       *retType = 4;
     }
     else if (symId == GT)
@@ -603,12 +603,12 @@ void expr(int funtionPos, int rangePos, int *retType)
       getsym();
       HighExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-        Fmap[funtionPos].instructions.push_back(0x30);
+        F_instruction(funtionPos,0x30);
       else
-        Fmap[funtionPos].instructions.push_back(0x32);
-      Fmap[funtionPos].insNum++;
-      Fmap[funtionPos].instructions.push_back(0x3a);
-      Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x32);
+      
+      F_instruction(funtionPos,0x3a);
+      
       *retType = 4;
     }
     else if (symId == GE)
@@ -616,14 +616,14 @@ void expr(int funtionPos, int rangePos, int *retType)
       getsym();
       HighExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-        Fmap[funtionPos].instructions.push_back(0x30);
+        F_instruction(funtionPos,0x30);
       else
-        Fmap[funtionPos].instructions.push_back(0x32);
-      Fmap[funtionPos].insNum++;
-      Fmap[funtionPos].instructions.push_back(0x39);
-      Fmap[funtionPos].insNum++;
-      Fmap[funtionPos].instructions.push_back(0x2e);
-      Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x32);
+      
+      F_instruction(funtionPos,0x39);
+      
+      F_instruction(funtionPos,0x2e);
+      
       *retType = 4;
     }
     else if (symId == EQ)
@@ -631,12 +631,12 @@ void expr(int funtionPos, int rangePos, int *retType)
       getsym();
       HighExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-        Fmap[funtionPos].instructions.push_back(0x30);
+        F_instruction(funtionPos,0x30);
       else
-        Fmap[funtionPos].instructions.push_back(0x32);
-      Fmap[funtionPos].insNum++;
-      Fmap[funtionPos].instructions.push_back(0x2e);
-      Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x32);
+      
+      F_instruction(funtionPos,0x2e);
+      
       *retType = 4;
     }
     else if (symId == NEQ)
@@ -644,10 +644,10 @@ void expr(int funtionPos, int rangePos, int *retType)
       getsym();
       HighExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-        Fmap[funtionPos].instructions.push_back(0x30);
+        F_instruction(funtionPos,0x30);
       else
-        Fmap[funtionPos].instructions.push_back(0x32);
-      Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x32);
+      
       *retType = 4;
     }
     else
@@ -666,13 +666,13 @@ void HighExpr(int funtionPos, int rangePos, int *retType)
       MediumExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
       {
-        Fmap[funtionPos].instructions.push_back(0x20);
-        Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x20);
+        
       }
       else if (*retType == 2)
       {
-        Fmap[funtionPos].instructions.push_back(0x24);
-        Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x24);
+        
       }
       else
         error(99, token);
@@ -683,13 +683,13 @@ void HighExpr(int funtionPos, int rangePos, int *retType)
       MediumExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
       {
-        Fmap[funtionPos].instructions.push_back(0x21);
-        Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x21);
+        
       }
       else if (*retType == 2)
       {
-        Fmap[funtionPos].instructions.push_back(0x25);
-        Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x25);
+        
       }
       else
         error(99, token);
@@ -710,13 +710,13 @@ void MediumExpr(int funtionPos, int rangePos, int *retType)
       LowExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
       {
-        Fmap[funtionPos].instructions.push_back(0x22);
-        Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x22);
+        
       }
       else if (*retType == 2)
       {
-        Fmap[funtionPos].instructions.push_back(0x26);
-        Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x26);
+        
       }
     }
     else if (symId == DIV)
@@ -725,13 +725,13 @@ void MediumExpr(int funtionPos, int rangePos, int *retType)
       LowExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
       {
-        Fmap[funtionPos].instructions.push_back(0x23);
-        Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x23);
+        
       }
       else if (*retType == 2)
       {
-        Fmap[funtionPos].instructions.push_back(0x27);
-        Fmap[funtionPos].insNum++;
+        F_instruction(funtionPos,0x27);
+        
       }
     }
     else
@@ -768,9 +768,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           error(99, token);
         //压入
         //stackalloc(0)
-        Fmap[funtionPos].instructions.push_back(0x1a);
+        F_instruction(funtionPos,0x1a);
         pushIns(0, Fmap[funtionPos].instructions);
-        Fmap[funtionPos].insNum++;
+        
         //返回调用者想要查看的返回值类型
         if (*retType == 0)
           *retType = 3;
@@ -783,9 +783,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           error(99, token);
         //压入
         //stackalloc(1)
-        Fmap[funtionPos].instructions.push_back(0x1a);
+        F_instruction(funtionPos,0x1a);
         pushIns(1, Fmap[funtionPos].instructions);
-        Fmap[funtionPos].insNum++;
+        
         //返回调用者想要查看的返回值类型
         if (*retType == 0)
           *retType = 1;
@@ -797,9 +797,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           error(99, token);
         //压入
         //stackalloc(1)
-        Fmap[funtionPos].instructions.push_back(0x1a);
+        F_instruction(funtionPos,0x1a);
         pushIns(1, Fmap[funtionPos].instructions);
-        Fmap[funtionPos].insNum++;
+        
         //返回调用者想要查看的返回值类型
         if (*retType == 0)
           *retType = 2;
@@ -808,17 +808,17 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       getsym(); // call_param_list | ')'
       if (symId == R_PAREN)
       {           // 空列表
-        Fmap[funtionPos].instructions.push_back(0x48);
+        F_instruction(funtionPos,0x48);
         pushIns(callFuntionPos, Fmap[funtionPos].instructions);
-        Fmap[funtionPos].insNum++;
+        
         getsym(); // read next
       }
       else
       {
         CallParamList(funtionPos, rangePos, callFuntionPos);
-        Fmap[funtionPos].instructions.push_back(0x48);
+        F_instruction(funtionPos,0x48);
         pushIns(callFuntionPos, Fmap[funtionPos].instructions);
-        Fmap[funtionPos].insNum++;
+        
 
         check(R_PAREN);
         getsym(); // read next
@@ -852,9 +852,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
               error(99, token);
             local = true;
             //loca()
-            Fmap[funtionPos].instructions.push_back(0x0a);
+            F_instruction(funtionPos,0x0a);
             pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            Fmap[funtionPos].insNum++;
+            
             break;
           }
         }
@@ -880,9 +880,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
               error(99, token);
             local = true;
             //loca()
-            Fmap[funtionPos].instructions.push_back(0x0a);
+            F_instruction(funtionPos,0x0a);
             pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            Fmap[funtionPos].insNum++;
+            
             break;
           }
         }
@@ -904,12 +904,12 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
               error(99, token);
             param = true;
             //arga()
-            Fmap[funtionPos].instructions.push_back(0x0b);
+            F_instruction(funtionPos,0x0b);
             if (Fmap[funtionPos].retType == "void")
               pushIns(i, Fmap[funtionPos].instructions);
             else
               pushIns(i + 1, Fmap[funtionPos].instructions);
-            Fmap[funtionPos].insNum++;
+            
             break;
           }
         }
@@ -933,9 +933,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
                 error(99, token);
               global = true;
               //globa()
-              Fmap[funtionPos].instructions.push_back(0x0c);
+              F_instruction(funtionPos,0x0c);
               pushIns(i, Fmap[funtionPos].instructions);
-              Fmap[funtionPos].insNum++;
+              
               break;
             }
           }
@@ -948,8 +948,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       if (*retType == 0)
         *retType = 3;
       //store64
-      Fmap[funtionPos].instructions.push_back(0x17);
-      Fmap[funtionPos].insNum++;
+      F_instruction(funtionPos,0x17);
+      
     }
     // 变量调用 IDENT 注：此时以读了下一个token
     else
@@ -990,9 +990,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
               error(99, token);
             local = true;
             //loca()
-            Fmap[funtionPos].instructions.push_back(0x0a);
+            F_instruction(funtionPos,0x0a);
             pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            Fmap[funtionPos].insNum++;
+            
             break;
           }
         }
@@ -1045,9 +1045,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
             }
             local = true;
             //loca()
-            Fmap[funtionPos].instructions.push_back(0x0a);
+            F_instruction(funtionPos,0x0a);
             pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            Fmap[funtionPos].insNum++;
+            
             break;
           }
         }
@@ -1084,12 +1084,12 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
               error(99, token);
             param = true;
             //arga()
-            Fmap[funtionPos].instructions.push_back(0x0b);
+            F_instruction(funtionPos,0x0b);
             if (Fmap[funtionPos].retType == "void")
               pushIns(i, Fmap[funtionPos].instructions);
             else
               pushIns(i + 1, Fmap[funtionPos].instructions);
-            Fmap[funtionPos].insNum++;
+            
             break;
           }
         }
@@ -1133,9 +1133,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
               global = true;
 
               //globa()
-              Fmap[funtionPos].instructions.push_back(0x0c);
+              F_instruction(funtionPos,0x0c);
               pushIns(i, Fmap[funtionPos].instructions);
-              Fmap[funtionPos].insNum++;
+              
               break;
             }
           }
@@ -1144,8 +1144,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       if (!local && !param && !global)
         error(99, token);
       //load64
-      Fmap[funtionPos].instructions.push_back(0x13);
-      Fmap[funtionPos].insNum++;
+      F_instruction(funtionPos,0x13);
+      
       // getsym(); 无需向后读，因为已预读了一个
     }
   }
@@ -1157,9 +1157,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       error(99, token);
     //TODO:int64_t的上限？
     int64_t temp = atoi(token);
-    Fmap[funtionPos].instructions.push_back(0x01);
+    F_instruction(funtionPos,0x01);
     pushIns(temp, Fmap[funtionPos].instructions);
-    Fmap[funtionPos].insNum++;
+    
     if (*retType == 0)
       *retType = 1;
     getsym();
@@ -1171,9 +1171,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       error(99, token);
     double tempd = atof(token);
     int64_t temp = doubleToRawBits(tempd);
-    Fmap[funtionPos].instructions.push_back(0x01);
+    F_instruction(funtionPos,0x01);
     pushIns(temp, Fmap[funtionPos].instructions);
-    Fmap[funtionPos].insNum++;
+    
     if (*retType == 0)
       *retType = 2;
     getsym();
@@ -1201,9 +1201,9 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     if (*retType != 0 && *retType != 1)
       error(99, token);
     int64_t tempNum = token[0];
-    Fmap[funtionPos].instructions.push_back(0x01);
+    F_instruction(funtionPos,0x01);
     pushIns(tempNum, Fmap[funtionPos].instructions);
-    Fmap[funtionPos].insNum++;
+    
     if (*retType == 0)
       *retType = 1;
     getsym();
@@ -1217,15 +1217,15 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     expr(funtionPos, rangePos, &retT);
     if (retT == 1)
     {
-      Fmap[funtionPos].instructions.push_back(0x34);
-      Fmap[funtionPos].insNum++;
+      F_instruction(funtionPos,0x34);
+      
       if (*retType == 0)
         *retType = 1;
     }
     else if (retT == 2)
     {
-      Fmap[funtionPos].instructions.push_back(0x35);
-      Fmap[funtionPos].insNum++;
+      F_instruction(funtionPos,0x35);
+      
       if (*retType == 0)
         *retType = 2;
     }
@@ -1257,8 +1257,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     getsym();
     check(R_PAREN);
     //scan.i
-    Fmap[funtionPos].instructions.push_back(0x50);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x50);
+    
     if (*retType == 0)
       *retType = 1;
     getsym();
@@ -1274,8 +1274,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     getsym();
     check(R_PAREN);
     //scan.f
-    Fmap[funtionPos].instructions.push_back(0x52);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x52);
+    
     if (*retType == 0)
       *retType = 2;
     getsym();
@@ -1291,8 +1291,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     getsym();
     check(R_PAREN);
     //scan.f
-    Fmap[funtionPos].instructions.push_back(0x51);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x51);
+    
     if (*retType == 0)
       *retType = 1;
     getsym();
@@ -1313,8 +1313,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     //')'
     check(R_PAREN);
     //print.i
-    Fmap[funtionPos].instructions.push_back(0x54);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x54);
+    
     if (*retType == 0)
       *retType = 3;
     getsym();
@@ -1334,8 +1334,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     getsym();
     check(R_PAREN);
     //print.f
-    Fmap[funtionPos].instructions.push_back(0x56);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x56);
+    
     if (*retType == 0)
       *retType = 3;
     getsym();
@@ -1354,8 +1354,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     //')'
     check(R_PAREN);
     //print.c
-    Fmap[funtionPos].instructions.push_back(0x55);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x55);
+    
     if (*retType == 0)
       *retType = 3;
     getsym();
@@ -1375,15 +1375,15 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     Global temp = Global(token, "string", true);
     int64_t tempNum = Gmap.size();
     Gmap.push_back(temp);
-    Fmap[funtionPos].instructions.push_back(0x01);
+    F_instruction(funtionPos,0x01);
     pushIns(tempNum, Fmap[funtionPos].instructions);
-    Fmap[funtionPos].insNum++;
+    
     //')'
     getsym();
     check(R_PAREN);
     //print.s
-    Fmap[funtionPos].instructions.push_back(0x57);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x57);
+    
     if (*retType == 0)
       *retType = 3;
     getsym();
@@ -1399,8 +1399,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     getsym();
     check(R_PAREN);
     //println
-    Fmap[funtionPos].instructions.push_back(0x58);
-    Fmap[funtionPos].insNum++;
+    F_instruction(funtionPos,0x58);
+    
     if (*retType == 0)
       *retType = 3;
     getsym();
