@@ -92,7 +92,7 @@ int getch()
 }
 int getsym()
 {
-  while (ch == '\t' || ch == ' ' || ch == '\n')
+  while (ch == '\t' || ch == ' ' || ch == '\r' || ch == '\n')
   {
     getch();
   }
