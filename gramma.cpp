@@ -200,7 +200,7 @@ void program()
   {
     if (symId == FN_KW)
     {
-      printf("[LOGGER] FUN: %s\n",token);
+      // printf("[LOGGER] FUN: %s\n",token);
       function();
     }
     else if (symId == LET_KW)
@@ -227,7 +227,6 @@ void function()
     for (int i = 0; i < Fmap.size(); i++)
       if (!strcmp(token, Fmap[i].name.c_str()))
         error(99, token);
-    string tmp = token;
     // printf("Fmap.push: %s\n",token);
     Fmap.push_back(Funtion(token));
   }
@@ -1322,7 +1321,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   }
   else if (symId == UINT_LITERAL)
   {
-    printf("[LOGGER] UINT: %lf\n", num);
+    // printf("[LOGGER] UINT: %lf\n", num);
     //要求该lowexpr的返回类型不是int
     if (*retType != 0 && *retType != 1)
       error(99, token);
@@ -1337,7 +1336,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   }
   else if (symId == DOUBLE_LITERAL)
   {
-    printf("[LOGGER] DOUBLE: %lf\n", num);
+    // printf("[LOGGER] DOUBLE: %lf\n", num);
     if (*retType != 0 && *retType != 2)
       error(99, token);
     double tempd = atof(token);
@@ -1351,7 +1350,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   }
   else if (symId == STRING_LITERAL)
   {
-    printf("[LOGGER] STRING: %s\n", token);
+    // printf("[LOGGER] STRING: %s\n", token);
     //要求该lowexpr的返回类型不是int
     if (*retType != 0 && *retType != 1)
       error(99, token);
@@ -1367,7 +1366,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   }
   else if (symId == CHAR_LITERAL)
   {
-    printf("[LOGGER] CHAR: %c\n", token[0]);
+    // printf("[LOGGER] CHAR: %c\n", token[0]);
     //要求该lowexpr的返回类型不是int
     if (*retType != 0 && *retType != 1)
       error(99, token);
@@ -1480,6 +1479,12 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     check(L_PAREN);
     //int
     getsym();
+    // if(!strcmp(token,"i")) getsym();
+    // else {
+    //   getsym();
+    //   getsym();
+    //   getsym();
+    // }
     expr(funtionPos, rangePos, &retT);
     //')'
     check(R_PAREN);
@@ -1579,7 +1584,34 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   else
     error(99, token);
 
-  // as 的部分不管了 TODO_LAST
+  // as 的部分不管了 TODO
+  if(symId == AS_KW){
+    getsym();
+    check(IDENT); // ty
+    string str;
+    if (!strcmp(token, "int") || !strcmp(token, "double") || !strcmp(token, "void"))
+        str = token;
+    else
+        error(99, token);
+    if(str=="int"){
+        if(*retType==2){
+            //ftoi
+            Fmap[funtionPos].instructions.push_back(0x37);
+            Fmap[funtionPos].insNum++;
+        }
+        else if(*retType!=1) error(99,token);
+    }
+    else if(str=="double"){
+        if(*retType==1){
+            //itof
+            Fmap[funtionPos].instructions.push_back(0x36);
+            Fmap[funtionPos].insNum++;
+        }
+        else if(*retType!=2) error(99,token);
+    }
+    else error(99,token);
+    getsym();
+  }
 }
 
 // expr (',' expr)* [非空才进入]
