@@ -14,7 +14,6 @@ typedef struct GLOBAL
   GLOBAL() : name(), dataType(), is_const() {}
   GLOBAL(string name, string dataType, bool is_const) : name(name), dataType(dataType), is_const(is_const) {}
 } Global;
-vector<Global> Gmap;
 typedef struct LOCAL
 {
   vector<Global> vars;

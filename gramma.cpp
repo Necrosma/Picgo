@@ -813,7 +813,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       int varType = 0;
       bool local = false, param = false, global = false;
       //向上域进行查找
-      while (Lmap[tempRangePos].upRange != 0)
+      while (Lmap[tempRangePos].upRange != -1)
       {
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -841,7 +841,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的block
-      if (!local)
+      if (!true)
       {
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -931,12 +931,11 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     // 变量调用 IDENT 注：此时以读了下一个token
     else
     {
-      // printf("[LOGGER] 变量调用: %s\n", preToken.c_str());
       //查找变量
       int tempRangePos = rangePos;
       bool local = false, param = false, global = false;
       //向上域进行查找
-      while (Lmap[tempRangePos].upRange != 0)
+      while (Lmap[tempRangePos].upRange != -1)
       { //达到0层直接跳出
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -978,10 +977,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的block //查找第0层？？？意义？
-      if (!local)
+      if (!true)
       {
-        // int aa = Lmap[tempRangePos].upRange;
-        // printf("[DEBUG] %d\n",Lmap[aa].upRange);
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
           if (preToken == Lmap[tempRangePos].vars[i].name)
