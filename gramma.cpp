@@ -63,10 +63,7 @@ void program()
   while (true)
   {
     if (symId == FN_KW)
-    {
-      // printf("[LOGGER] FUN: %s\n",token);
       function();
-    }
     else if (symId == LET_KW)
       let_decl_stmt(0, 0);
     else if (symId == CONST_KW)
@@ -91,7 +88,6 @@ void function()
     for (int i = 0; i < Fmap.size(); i++)
       if (!strcmp(token, Fmap[i].name.c_str()))
         error(99, token);
-    // printf("Fmap.push: %s\n",token);
     Fmap.push_back(Funtion(token));
   }
 
@@ -143,12 +139,12 @@ void function()
   check(IDENT);
   if (!strcmp(token, "int") || !strcmp(token, "double") || !strcmp(token, "void")){
     Fmap[funtionPos].retType = token;
-    // printf("FMAP TYPE: %s\n",Fmap[funtionPos].retType.c_str());
   }
   else
     error(99, token);
 
   getsym();
+  //函数父域为全局变量，0
   block_stmt(funtionPos, 0);
   //默认ret
   F_instruction(funtionPos,0x49);
@@ -204,6 +200,7 @@ void block_stmt(int funtionPos, int upRange)
     {
       break;
     }
+    // 恢复域级
     rangePos = savePos;
   }
   check(R_BRACE); //stmt尾已读
@@ -280,6 +277,7 @@ void let_decl_stmt(int funtionPos, int rangePos_)
     varPos = Lmap[0].vars.size();
   else 
     varPos = Fmap[funtionPos].localSlotNum++;
+  tempVar.funSlot = varPos;
   Lmap[rangePos].vars.push_back(tempVar);
 
   getsym(); // = | ;
@@ -605,8 +603,8 @@ void LowExpr(int funtionPos, int *retType)
   if (symId == IDENT)
   {
     string preToken = token;
-    //TODO 当前已读IDENT，在读下一个之前需要保存
     getsym(); // '(' | '=' | AFTER
+
     // 函数调用 IDENT '(' call_param_list? ')'
     if (symId == L_PAREN)
     {
@@ -697,9 +695,10 @@ void LowExpr(int funtionPos, int *retType)
       {
         int i = findVar(tempRangePos,preToken,&varType,ASSIGN_);
         if(i!=-1){
+          int slot = Lmap[tempRangePos].vars[i].funSlot;
           local = true;
           F_instruction(funtionPos,0x0a);
-          pushIns(i, Fmap[funtionPos].instructions);
+          pushIns(slot, Fmap[funtionPos].instructions);
           break;
         }
         tempRangePos = Lmap[tempRangePos].upRange;
@@ -747,9 +746,11 @@ void LowExpr(int funtionPos, int *retType)
       { //达到0层直接跳出
         int i = findVar(tempRangePos,preToken,retType,LOAD);
         if(i != -1){
+          int slot = Lmap[tempRangePos].vars[i].funSlot;
+          printf("\nFIND i = %d; Slot = %d",i,slot);
           local = true;
           F_instruction(funtionPos,0x0a);
-          pushIns(i, Fmap[funtionPos].instructions);
+          pushIns(slot, Fmap[funtionPos].instructions);
           break;
         }
         tempRangePos = Lmap[tempRangePos].upRange;
@@ -1206,5 +1207,12 @@ void parse()
     if(!(n%2) && n%16) cout<<' ';
     if(!(n%16)) cout<<'\n';
   }
+  // puts("\n================");
+  // for(int i=0;i<Lmap.size();++i){
+  //   for(int j=0;j<Lmap[i].vars.size();++j)
+  //     printf("[%d-%d] %s",i,j,Lmap[i].vars[j].name.c_str());
+  //   puts("");
+  // }
+
   fwrite(str.c_str(), str.size(), 1, outFile);
 }
