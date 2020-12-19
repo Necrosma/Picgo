@@ -812,7 +812,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       int varType = 0;
       bool local = false, param = false, global = false;
       //向上域进行查找
-      while (Lmap[tempRangePos].upRange != 0)
+      while (Lmap[tempRangePos].upRange != -1)
       {
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -840,7 +840,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的block
-      if (!true)
+      if (!local)
       {
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -935,7 +935,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       int tempRangePos = rangePos;
       bool local = false, param = false, global = false;
       //向上域进行查找
-      while (Lmap[tempRangePos].upRange != 0)
+      while (Lmap[tempRangePos].upRange != -1)
       { //达到0层直接跳出
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -977,7 +977,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的block //查找第0层？？？意义？
-      if (!true)
+      if (!local)
       {
         // int aa = Lmap[tempRangePos].upRange;
         // printf("[DEBUG] %d\n",Lmap[aa].upRange);
