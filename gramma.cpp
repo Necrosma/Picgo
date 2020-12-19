@@ -925,7 +925,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //函数的参数
       if (!local)
       {
-        int i = findParam(tempRangePos,preToken,retType);
+        int i = findParam(funtionPos,preToken,retType);
         if(i!=-1){
           param = true;
           F_instruction(funtionPos,0x0b);
