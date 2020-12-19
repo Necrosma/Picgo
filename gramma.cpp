@@ -813,7 +813,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       int varType = 0;
       bool local = false, param = false, global = false;
       //向上域进行查找
-      while (Lmap[tempRangePos].upRange != -1)
+      while (Lmap[tempRangePos].upRange != 0)
       {
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -936,7 +936,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       int tempRangePos = rangePos;
       bool local = false, param = false, global = false;
       //向上域进行查找
-      while (Lmap[tempRangePos].upRange != -1)
+      while (Lmap[tempRangePos].upRange != 0)
       { //达到0层直接跳出
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
