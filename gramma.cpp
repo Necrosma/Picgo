@@ -160,6 +160,7 @@ void function()
 void block_stmt(int funtionPos, int upRange)
 {
   rangePos = Lmap.size();
+  int savePos = rangePos;
   Lmap.push_back(Local(funtionPos, upRange));
 
   check(L_BRACE);
@@ -203,6 +204,7 @@ void block_stmt(int funtionPos, int upRange)
     {
       break;
     }
+    rangePos = savePos;
   }
   check(R_BRACE); //stmt尾已读
   getsym();
