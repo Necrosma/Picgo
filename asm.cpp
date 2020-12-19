@@ -42,7 +42,8 @@ vector<Funtion> Fmap;
 vector<unsigned char> instructions;
 
 //==============================
-void checkVarType(string type, int* retType);
+void checkVarType(Global type, int* retType);
+void setVarType(Global param, int* retType);
 //==============================
 
 uint64_t doubleToRawBits(double x)
@@ -138,56 +139,69 @@ void F_instruction(int funtionPos, int n)
   Fmap[funtionPos].insNum++;
 }
 
-int findVar(int tempRangePos, string preToken, int *retType)
+int findVar(int tempRangePos, string preToken, int *retType, bool isLoad)
 {
   for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
   {
     if (preToken == Lmap[tempRangePos].vars[i].name)
     {
-      checkVarType(Lmap[tempRangePos].vars[i].dataType,retType);
+      if(isLoad) checkVarType(Lmap[tempRangePos].vars[i],retType);
+      else setVarType(Lmap[tempRangePos].vars[i],retType);
       return i;
     }
   }
   return -1;
 }
 
-int findParam(int funtionPos, string preToken, int *retType)
+int findParam(int funtionPos, string preToken, int *retType, bool isLoad)
 {
   for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
   {
     if (preToken == Fmap[funtionPos].params[i].name)
     {
-      checkVarType(Fmap[funtionPos].params[i].dataType,retType);
+      if(isLoad)checkVarType(Fmap[funtionPos].params[i],retType);
+      else setVarType(Fmap[funtionPos].params[i],retType);
       return i;
     }
   }
   return -1;
 }
 
-void checkVarType(string type, int* retType)
+void setVarType(Global param, int* retType){
+  if (param.is_const)
+    error(99, token);
+  if (param.dataType == "int")
+    *retType = 1;
+  else if (param.dataType == "double")
+    *retType = 2;
+  else
+    error(99, token);
+}
+
+void checkVarType(Global var, int* retType)
 {
-  if (type == "int")
+  if (var.dataType == "int")
   {
     if (*retType != 0 && *retType != 1)
       error(99, token);
     if (*retType == 0)
       *retType = 1;
   }
-  else if (type == "double")
+  else if (var.dataType == "double")
   {
     if (*retType != 0 && *retType != 2)
       error(99, token);
     if (*retType == 0)
       *retType = 2;
   }
-  else if (type == "void")
+  else if (var.dataType == "void")
   {
     if (*retType != 0 && *retType != 3)
       error(99, token);
     if (*retType == 0)
       *retType = 3;
   }
-  else if (type == "string")
+  else if (var.dataType == "string")
     ;
   else
     error(99, token);

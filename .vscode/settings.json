@@ -6,6 +6,9 @@
     "fstream": "cpp",
     "array": "cpp",
     "*.tcc": "cpp",
-    "type_traits": "cpp"
+    "type_traits": "cpp",
+    "istream": "cpp",
+    "tuple": "cpp",
+    "utility": "cpp"
   }
 }

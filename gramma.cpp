@@ -10,6 +10,8 @@
 #include <cstring>
 #include "lexer.cpp"
 #include "asm.cpp"
+#define LOAD true
+#define ASSIGN_ false
 using namespace std;
 
 void parse();
@@ -815,83 +817,79 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //向上域进行查找
       while (Lmap[tempRangePos].upRange != -1)
       {
-        for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
-        {
-          if (preToken == Lmap[tempRangePos].vars[i].name)
-          {
-            if (Lmap[tempRangePos].vars[i].is_const)
-              error(99, token);
-            if (Lmap[tempRangePos].vars[i].dataType == "int")
-              varType = 1;
-            else if (Lmap[tempRangePos].vars[i].dataType == "double")
-              varType = 2;
-            else
-              error(99, token);
-            local = true;
-            //loca()
-            F_instruction(funtionPos,0x0a);
-            pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            
-            break;
-          }
-        }
-        if (local)
+        int i = findVar(tempRangePos,preToken,&varType,ASSIGN_);
+        if(i!=-1){
+          local = true;
+          F_instruction(funtionPos,0x0a);
+          pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
           break;
-        else
-          tempRangePos = Lmap[tempRangePos].upRange;
+        }
+        // for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
+        // {
+        //   if (preToken == Lmap[tempRangePos].vars[i].name)
+        //   {
+        //     if (Lmap[tempRangePos].vars[i].is_const)
+        //       error(99, token);
+        //     if (Lmap[tempRangePos].vars[i].dataType == "int")
+        //       varType = 1;
+        //     else if (Lmap[tempRangePos].vars[i].dataType == "double")
+        //       varType = 2;
+        //     else
+        //       error(99, token);
+        //     local = true;
+        //     //loca()
+        //     F_instruction(funtionPos,0x0a);
+        //     pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
+            
+        //     break;
+        //   }
+        // }
+        tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的参数
       if (!local)
       {
-        for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
-        {
-          if (preToken == Fmap[funtionPos].params[i].name)
-          {
-            if (Fmap[funtionPos].params[i].is_const)
-              error(99, token);
-            if (Fmap[funtionPos].params[i].dataType == "int")
-              varType = 1;
-            else if (Fmap[funtionPos].params[i].dataType == "double")
-              varType = 2;
-            else
-              error(99, token);
-            param = true;
-            //arga()
-            F_instruction(funtionPos,0x0b);
-            if (Fmap[funtionPos].retType == "void")
-              pushIns(i, Fmap[funtionPos].instructions);
-            else
-              pushIns(i + 1, Fmap[funtionPos].instructions);
-            
-            break;
-          }
+        int i = findParam(funtionPos,preToken,&varType,ASSIGN_);
+        if(i!=-1){
+          param = true;
+          F_instruction(funtionPos,0x0b);
+          if (Fmap[funtionPos].retType == "void")
+            pushIns(i, Fmap[funtionPos].instructions);
+          else
+            pushIns(i + 1, Fmap[funtionPos].instructions);
         }
+        // for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
+        // {
+        //   if (preToken == Fmap[funtionPos].params[i].name)
+        //   {
+        //     if (Fmap[funtionPos].params[i].is_const)
+        //       error(99, token);
+        //     if (Fmap[funtionPos].params[i].dataType == "int")
+        //       varType = 1;
+        //     else if (Fmap[funtionPos].params[i].dataType == "double")
+        //       varType = 2;
+        //     else
+        //       error(99, token);
+        //     param = true;
+        //     //arga()
+        //     F_instruction(funtionPos,0x0b);
+        //     if (Fmap[funtionPos].retType == "void")
+        //       pushIns(i, Fmap[funtionPos].instructions);
+        //     else
+        //       pushIns(i + 1, Fmap[funtionPos].instructions);
+            
+        //     break;
+        //   }
+        // }
       }
       //全局变量
       if (!local && !param)
       {
-        for (int i = 0; i < Lmap[0].vars.size(); i++)
-        {
-          if (Lmap[0].vars[i].dataType != "string")
-          {
-            if (preToken == Lmap[0].vars[i].name)
-            {
-              if (Lmap[0].vars[i].is_const)
-                error(99, token);
-              if (Lmap[0].vars[i].dataType == "int")
-                varType = 1;
-              else if (Lmap[0].vars[i].dataType == "double")
-                varType = 2;
-              else
-                error(99, token);
-              global = true;
-              //globa()
-              F_instruction(funtionPos,0x0c);
-              pushIns(i, Fmap[funtionPos].instructions);
-              
-              break;
-            }
-          }
+        int i = findVar(0,preToken,&varType,ASSIGN_);
+        if(i!=-1){
+          global = true;
+          F_instruction(funtionPos,0x0c);
+          pushIns(i, Fmap[funtionPos].instructions);
         }
       }
       if (!local && !param && !global)
@@ -913,7 +911,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //向上域进行查找
       while (Lmap[tempRangePos].upRange != -1)
       { //达到0层直接跳出
-        int i = findVar(tempRangePos,preToken,retType);
+        int i = findVar(tempRangePos,preToken,retType,LOAD);
         if(i != -1){
           local = true;
           F_instruction(funtionPos,0x0a);
@@ -925,7 +923,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //函数的参数
       if (!local)
       {
-        int i = findParam(funtionPos,preToken,retType);
+        int i = findParam(funtionPos,preToken,retType,LOAD);
         if(i!=-1){
           param = true;
           F_instruction(funtionPos,0x0b);
@@ -938,7 +936,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //全局变量
       if (!local && !param)
       {
-        int i = findVar(0,preToken,retType);
+        int i = findVar(0,preToken,retType,LOAD);
         if(i!=-1){
           global = true;
           F_instruction(funtionPos,0x0c);
