@@ -41,6 +41,10 @@ vector<Funtion> Fmap;
 
 vector<unsigned char> instructions;
 
+//==============================
+void checkVarType(string type, int* retType);
+//==============================
+
 uint64_t doubleToRawBits(double x)
 {
   uint64_t bits;
@@ -134,37 +138,55 @@ void F_instruction(int funtionPos, int n)
   Fmap[funtionPos].insNum++;
 }
 
-int findVar(int tempRangePos, string preToken, int* retType)
+int findVar(int tempRangePos, string preToken, int *retType)
 {
   for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
   {
     if (preToken == Lmap[tempRangePos].vars[i].name)
     {
-      if (Lmap[tempRangePos].vars[i].dataType == "int")
-      {
-        if (*retType != 0 && *retType != 1)
-          error(99, token);
-        if (*retType == 0)
-          *retType = 1;
-      }
-      else if (Lmap[tempRangePos].vars[i].dataType == "double")
-      {
-        if (*retType != 0 && *retType != 2)
-          error(99, token);
-        if (*retType == 0)
-          *retType = 2;
-      }
-      else if (Lmap[tempRangePos].vars[i].dataType == "void")
-      {
-        if (*retType != 0 && *retType != 3)
-          error(99, token);
-        if (*retType == 0)
-          *retType = 3;
-      }
-      else
-        error(99, token);
+      checkVarType(Lmap[tempRangePos].vars[i].dataType,retType);
       return i;
     }
   }
   return -1;
+}
+
+int findParam(int funtionPos, string preToken, int *retType)
+{
+  for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
+  {
+    if (preToken == Fmap[funtionPos].params[i].name)
+    {
+      checkVarType(Fmap[funtionPos].params[i].dataType,retType);
+      return i;
+    }
+  }
+  return -1;
+}
+
+void checkVarType(string type, int* retType)
+{
+  if (type == "int")
+  {
+    if (*retType != 0 && *retType != 1)
+      error(99, token);
+    if (*retType == 0)
+      *retType = 1;
+  }
+  else if (type == "double")
+  {
+    if (*retType != 0 && *retType != 2)
+      error(99, token);
+    if (*retType == 0)
+      *retType = 2;
+  }
+  else if (type == "void")
+  {
+    if (*retType != 0 && *retType != 3)
+      error(99, token);
+    if (*retType == 0)
+      *retType = 3;
+  }
+  else
+    error(99, token);
 }

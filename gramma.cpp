@@ -920,129 +920,29 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
           break;
         }
-        // for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
-        // {
-        //   if (preToken == Lmap[tempRangePos].vars[i].name)
-        //   {
-        //     if (Lmap[tempRangePos].vars[i].dataType == "int")
-        //     {
-        //       if (*retType != 0 && *retType != 1)
-        //         error(99, token);
-        //       if (*retType == 0)
-        //         *retType = 1;
-        //     }
-        //     else if (Lmap[tempRangePos].vars[i].dataType == "double")
-        //     {
-        //       if (*retType != 0 && *retType != 2)
-        //         error(99, token);
-        //       if (*retType == 0)
-        //         *retType = 2;
-        //     }
-        //     else if (Lmap[tempRangePos].vars[i].dataType == "void")
-        //     {
-        //       if (*retType != 0 && *retType != 3)
-        //         error(99, token);
-        //       if (*retType == 0)
-        //         *retType = 3;
-        //     }
-        //     else
-        //       error(99, token);
-        //     local = true;
-        //     //loca()
-        //     F_instruction(funtionPos,0x0a);
-        //     pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            
-        //     break;
-        //   }
-        // }
-        // if (local)
-        //   break; // 向浅层找到了变量
         tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的参数
       if (!local)
       {
-        for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
-        {
-          if (preToken == Fmap[funtionPos].params[i].name)
-          {
-            if (Fmap[funtionPos].params[i].dataType == "int")
-            {
-              if (*retType != 0 && *retType != 1)
-                error(99, token);
-              if (*retType == 0)
-                *retType = 1;
-            }
-            else if (Fmap[funtionPos].params[i].dataType == "double")
-            {
-              if (*retType != 0 && *retType != 2)
-                error(99, token);
-              if (*retType == 0)
-                *retType = 2;
-            }
-            else if (Fmap[funtionPos].params[i].dataType == "void")
-            {
-              if (*retType != 0 && *retType != 3)
-                error(99, token);
-              if (*retType == 0)
-                *retType = 3;
-            }
-            else
-              error(99, token);
-            param = true;
-            //arga()
-            F_instruction(funtionPos,0x0b);
-            if (Fmap[funtionPos].retType == "void")
-              pushIns(i, Fmap[funtionPos].instructions);
-            else
-              pushIns(i + 1, Fmap[funtionPos].instructions);
-            
-            break;
-          }
+        int i = findParam(tempRangePos,preToken,retType);
+        if(i!=-1){
+          param = true;
+          F_instruction(funtionPos,0x0b);
+          if (Fmap[funtionPos].retType == "void")
+            pushIns(i, Fmap[funtionPos].instructions);
+          else
+            pushIns(i + 1, Fmap[funtionPos].instructions);
         }
       }
       //全局变量
       if (!local && !param)
       {
-        // int i = findVar(0,preToken,retType);
-        for (int i = 0; i < Lmap[0].vars.size(); i++)
-        {
-          if (Lmap[0].vars[i].dataType != "string")
-          {
-            if (preToken == Lmap[0].vars[i].name)
-            {
-              if (Lmap[0].vars[i].dataType == "int")
-              {
-                if (*retType != 0 && *retType != 1)
-                  error(99, token);
-                if (*retType == 0)
-                  *retType = 1;
-              }
-              else if (Lmap[0].vars[i].dataType == "double")
-              {
-                if (*retType != 0 && *retType != 2)
-                  error(99, token);
-                if (*retType == 0)
-                  *retType = 2;
-              }
-              else if (Lmap[0].vars[i].dataType == "void")
-              {
-                if (*retType != 0 && *retType != 3)
-                  error(99, token);
-                if (*retType == 0)
-                  *retType = 3;
-              }
-              else
-                error(99, token);
-              global = true;
-
-              //globa()
-              F_instruction(funtionPos,0x0c);
-              pushIns(i, Fmap[funtionPos].instructions);
-              
-              break;
-            }
-          }
+        int i = findVar(0,preToken,retType);
+        if(i!=-1){
+          global = true;
+          F_instruction(funtionPos,0x0c);
+          pushIns(i, Fmap[funtionPos].instructions);
         }
       }
       if (!local && !param && !global)
