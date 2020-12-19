@@ -840,30 +840,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         else
           tempRangePos = Lmap[tempRangePos].upRange;
       }
-      //函数的block
-      if (!true)
-      {
-        for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
-        {
-          if (preToken == Lmap[tempRangePos].vars[i].name)
-          {
-            if (Lmap[tempRangePos].vars[i].is_const)
-              error(99, token);
-            if (Lmap[tempRangePos].vars[i].dataType == "int")
-              varType = 1;
-            else if (Lmap[tempRangePos].vars[i].dataType == "double")
-              varType = 2;
-            else
-              error(99, token);
-            local = true;
-            //loca()
-            F_instruction(funtionPos,0x0a);
-            pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            
-            break;
-          }
-        }
-      }
       //函数的参数
       if (!local)
       {
@@ -937,96 +913,51 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //向上域进行查找
       while (Lmap[tempRangePos].upRange != -1)
       { //达到0层直接跳出
-        for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
-        {
-          if (preToken == Lmap[tempRangePos].vars[i].name)
-          {
-            if (Lmap[tempRangePos].vars[i].dataType == "int")
-            {
-              if (*retType != 0 && *retType != 1)
-                error(99, token);
-              if (*retType == 0)
-                *retType = 1;
-            }
-            else if (Lmap[tempRangePos].vars[i].dataType == "double")
-            {
-              if (*retType != 0 && *retType != 2)
-                error(99, token);
-              if (*retType == 0)
-                *retType = 2;
-            }
-            else if (Lmap[tempRangePos].vars[i].dataType == "void")
-            {
-              if (*retType != 0 && *retType != 3)
-                error(99, token);
-              if (*retType == 0)
-                *retType = 3;
-            }
-            else
-              error(99, token);
-            local = true;
-            //loca()
-            F_instruction(funtionPos,0x0a);
-            pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            
-            break;
-          }
+        int i = findVar(tempRangePos,preToken,retType);
+        if(i != -1){
+          local = true;
+          F_instruction(funtionPos,0x0a);
+          pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
+          break;
         }
-        if (local)
-          break; // 向浅层找到了变量
+        // for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
+        // {
+        //   if (preToken == Lmap[tempRangePos].vars[i].name)
+        //   {
+        //     if (Lmap[tempRangePos].vars[i].dataType == "int")
+        //     {
+        //       if (*retType != 0 && *retType != 1)
+        //         error(99, token);
+        //       if (*retType == 0)
+        //         *retType = 1;
+        //     }
+        //     else if (Lmap[tempRangePos].vars[i].dataType == "double")
+        //     {
+        //       if (*retType != 0 && *retType != 2)
+        //         error(99, token);
+        //       if (*retType == 0)
+        //         *retType = 2;
+        //     }
+        //     else if (Lmap[tempRangePos].vars[i].dataType == "void")
+        //     {
+        //       if (*retType != 0 && *retType != 3)
+        //         error(99, token);
+        //       if (*retType == 0)
+        //         *retType = 3;
+        //     }
+        //     else
+        //       error(99, token);
+        //     local = true;
+        //     //loca()
+        //     F_instruction(funtionPos,0x0a);
+        //     pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
+            
+        //     break;
+        //   }
+        // }
+        // if (local)
+        //   break; // 向浅层找到了变量
         tempRangePos = Lmap[tempRangePos].upRange;
-      }
-      //函数的block //查找第0层？？？意义？
-      if (!true)
-      {
-        for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
-        {
-          if (preToken == Lmap[tempRangePos].vars[i].name)
-          {
-            if (Lmap[tempRangePos].vars[i].dataType == "int")
-            {
-              if (*retType != 0 && *retType != 1)
-              {
-                printf("返回类型错误：Excepted 1 Actual %d\n", *retType);
-                error(99, token);
-              }
-              if (*retType == 0)
-                *retType = 1;
-            }
-            else if (Lmap[tempRangePos].vars[i].dataType == "double")
-            {
-              if (*retType != 0 && *retType != 2)
-              {
-
-                printf("返回类型错误：Excepted 2 Actual %d\n", *retType);
-                error(99, token);
-              }
-              if (*retType == 0)
-                *retType = 2;
-            }
-            else if (Lmap[tempRangePos].vars[i].dataType == "void")
-            {
-              if (*retType != 0 && *retType != 3)
-              {
-                printf("返回类型错误：Excepted 0 Actual %d\n", *retType);
-                error(99, token);
-              }
-              if (*retType == 0)
-                *retType = 3;
-            }
-            else
-            {
-              printf("返回类型错误：Actual %d\n", *retType);
-              error(99, token);
-            }
-            local = true;
-            //loca()
-            F_instruction(funtionPos,0x0a);
-            pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            
-            break;
-          }
-        }
       }
       //函数的参数
       if (!local)
@@ -1073,13 +1004,13 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //全局变量
       if (!local && !param)
       {
+        // int i = findVar(0,preToken,retType);
         for (int i = 0; i < Lmap[0].vars.size(); i++)
         {
           if (Lmap[0].vars[i].dataType != "string")
           {
             if (preToken == Lmap[0].vars[i].name)
             {
-
               if (Lmap[0].vars[i].dataType == "int")
               {
                 if (*retType != 0 && *retType != 1)

@@ -41,8 +41,6 @@ vector<Funtion> Fmap;
 
 vector<unsigned char> instructions;
 
-
-
 uint64_t doubleToRawBits(double x)
 {
   uint64_t bits;
@@ -130,7 +128,43 @@ bool init_start()
   return true;
 }
 
-void F_instruction(int funtionPos, int n){
+void F_instruction(int funtionPos, int n)
+{
   Fmap[funtionPos].instructions.push_back(n);
   Fmap[funtionPos].insNum++;
+}
+
+int findVar(int tempRangePos, string preToken, int* retType)
+{
+  for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
+  {
+    if (preToken == Lmap[tempRangePos].vars[i].name)
+    {
+      if (Lmap[tempRangePos].vars[i].dataType == "int")
+      {
+        if (*retType != 0 && *retType != 1)
+          error(99, token);
+        if (*retType == 0)
+          *retType = 1;
+      }
+      else if (Lmap[tempRangePos].vars[i].dataType == "double")
+      {
+        if (*retType != 0 && *retType != 2)
+          error(99, token);
+        if (*retType == 0)
+          *retType = 2;
+      }
+      else if (Lmap[tempRangePos].vars[i].dataType == "void")
+      {
+        if (*retType != 0 && *retType != 3)
+          error(99, token);
+        if (*retType == 0)
+          *retType = 3;
+      }
+      else
+        error(99, token);
+      return i;
+    }
+  }
+  return -1;
 }
