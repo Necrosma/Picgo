@@ -44,31 +44,7 @@ bool isExpr()
   else
     return false;
 }
-bool init_start()
-{
-  //stackalloc(1)
-  Fmap[0].instructions.push_back(0x1a);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x01);
-  Fmap[0].insNum++;
-  //call(1)
-  Fmap[0].instructions.push_back(0x48);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x01);
-  Fmap[0].insNum++;
-  //popn(1)
-  Fmap[0].instructions.push_back(0x03);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x01);
-  Fmap[0].insNum++;
-  return true;
-}
+
 
 /*===========================================/
 Functions
@@ -244,7 +220,7 @@ void const_decl_stmt(int funtionPos, int rangePos)
     retType = 2;
   else
   {
-    puts("定义数据类型不是int或double");
+    // puts("定义数据类型不是int或double");
     error(99, token);
   }
   Global tempVar(preToken, token, true);
@@ -836,7 +812,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       int varType = 0;
       bool local = false, param = false, global = false;
       //向上域进行查找
-      while (Lmap[tempRangePos].upRange != -1)
+      while (Lmap[tempRangePos].upRange != 0)
       {
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -864,7 +840,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的block
-      if (!local)
+      if (!true)
       {
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -959,7 +935,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       int tempRangePos = rangePos;
       bool local = false, param = false, global = false;
       //向上域进行查找
-      while (Lmap[tempRangePos].upRange != -1)
+      while (Lmap[tempRangePos].upRange != 0)
       { //达到0层直接跳出
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
@@ -1001,8 +977,10 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的block //查找第0层？？？意义？
-      if (!local)
+      if (!true)
       {
+        // int aa = Lmap[tempRangePos].upRange;
+        // printf("[DEBUG] %d\n",Lmap[aa].upRange);
         for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
         {
           if (preToken == Lmap[tempRangePos].vars[i].name)
@@ -1126,10 +1104,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
                   *retType = 3;
               }
               else
-              {
-                puts(Gmap[i].dataType.c_str());
                 error(99, token);
-              }
               global = true;
 
               //globa()
@@ -1166,7 +1141,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   }
   else if (symId == DOUBLE_LITERAL)
   {
-    // printf("[LOGGER] DOUBLE: %lf\n", num);
     if (*retType != 0 && *retType != 2)
       error(99, token);
     double tempd = atof(token);
@@ -1180,7 +1154,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   }
   else if (symId == STRING_LITERAL)
   {
-    // printf("[LOGGER] STRING: %s\n", token);
     //要求该lowexpr的返回类型不是int
     if (*retType != 0 && *retType != 1)
       error(99, token);
@@ -1196,7 +1169,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   }
   else if (symId == CHAR_LITERAL)
   {
-    // printf("[LOGGER] CHAR: %c\n", token[0]);
     //要求该lowexpr的返回类型不是int
     if (*retType != 0 && *retType != 1)
       error(99, token);
@@ -1232,7 +1204,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     else
     {
       printf("%d ", retT);
-      puts("Minus expr");
+      // puts("Minus expr");
       error(99, token);
     }
   }
@@ -1299,10 +1271,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   }
   else if (symId == PUTINT)
   {
-    if (*retType != 0 && *retType != 3){
-      printf("PUTINT type error: %d\n",*retType);
+    if (*retType != 0 && *retType != 3)
       error(99,token);
-    }
     int retT = 1;
     //'('
     getsym();
@@ -1410,7 +1380,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
 
   // as 的部分不管了 TODO
   if(symId == AS_KW){
-    puts("as is not implement");
+    // puts("as is not implement");
     error(99,token);
   } 
 }
