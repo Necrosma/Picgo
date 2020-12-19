@@ -234,9 +234,7 @@ void const_decl_stmt(int funtionPos, int rangePos)
     //全局变量查重
     for (int i = 0; i < Lmap[0].vars.size(); i++)
     {
-      if (Lmap[0].vars[i].dataType == "string")
-        continue;
-      else if (Lmap[0].vars[i].name == tempVar.name)
+      if (Lmap[0].vars[i].name == tempVar.name)
         error(99, token);
     }
     varPos = Lmap[0].vars.size();
@@ -247,9 +245,7 @@ void const_decl_stmt(int funtionPos, int rangePos)
     //所在域查重
     for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
     {
-      if (Lmap[rangePos].vars[i].dataType == "string")
-        continue;
-      else if (Lmap[rangePos].vars[i].name == tempVar.name)
+      if (Lmap[rangePos].vars[i].name == tempVar.name)
         error(99, token);
     }
     if (Lmap[rangePos].upRange == -1)
@@ -257,16 +253,12 @@ void const_decl_stmt(int funtionPos, int rangePos)
       //和函数参数查重
       for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
       {
-        if (Fmap[funtionPos].params[i].dataType == "string")
-          continue;
-        else if (Fmap[funtionPos].params[i].name == tempVar.name)
+        if (Fmap[funtionPos].params[i].name == tempVar.name)
           error(99, token);
       }
     }
     varPos = Fmap[funtionPos].localSlotNum++;
     Lmap[rangePos].vars.push_back(tempVar);
-    int postionInFuntion = Lmap[rangePos].postionInFuntion.size();
-    Lmap[rangePos].postionInFuntion.push_back(postionInFuntion);
   }
 
   getsym(); // =
@@ -320,9 +312,7 @@ void let_decl_stmt(int funtionPos, int rangePos)
     //全局变量查重
     for (int i = 0; i < Lmap[0].vars.size(); i++)
     {
-      if (Lmap[0].vars[i].dataType == "string")
-        continue;
-      else if (Lmap[0].vars[i].name == tempVar.name)
+      if (Lmap[0].vars[i].name == tempVar.name)
         error(99, token);
     }
     varPos = Lmap[0].vars.size();
@@ -333,9 +323,9 @@ void let_decl_stmt(int funtionPos, int rangePos)
     //所在域查重
     for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
     {
-      if (Lmap[rangePos].vars[i].dataType == "string")
-        continue;
-      else if (Lmap[rangePos].vars[i].name == tempVar.name)
+      // if (Lmap[rangePos].vars[i].dataType == "string")
+      //   continue;
+      if (Lmap[rangePos].vars[i].name == tempVar.name)
         error(99, token);
     }
     if (Lmap[rangePos].upRange == -1)
@@ -343,16 +333,12 @@ void let_decl_stmt(int funtionPos, int rangePos)
       //和函数参数查重
       for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
       {
-        if (Fmap[funtionPos].params[i].dataType == "string")
-          continue;
-        else if (Fmap[funtionPos].params[i].name == tempVar.name)
+        if (Fmap[funtionPos].params[i].name == tempVar.name)
           error(99, token);
       }
     }
     varPos = Fmap[funtionPos].localSlotNum++;
     Lmap[rangePos].vars.push_back(tempVar);
-    int postionInFuntion = Lmap[rangePos].postionInFuntion.size();
-    Lmap[rangePos].postionInFuntion.push_back(postionInFuntion);
   }
 
   getsym(); // = | ;
@@ -780,7 +766,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         if(i!=-1){
           local = true;
           F_instruction(funtionPos,0x0a);
-          // pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
           pushIns(i, Fmap[funtionPos].instructions);
           break;
         }
@@ -832,7 +817,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         if(i != -1){
           local = true;
           F_instruction(funtionPos,0x0a);
-          // pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
           pushIns(i, Fmap[funtionPos].instructions);
           break;
         }
@@ -1292,14 +1276,6 @@ void parse()
     cout<<hex<<(int)instructions[i];
     if(!(n%2) && n%16) cout<<' ';
     if(!(n%16)) cout<<'\n';
-  }
-
-  for(int i=0;i<Lmap.size();++i){
-    puts("");
-    for(int j=0;j<Lmap[i].postionInFuntion.size();++j){
-      int a = Lmap[i].postionInFuntion[j];
-      printf("%d ",a);
-    }
   }
   fwrite(str.c_str(), str.size(), 1, outFile);
 }

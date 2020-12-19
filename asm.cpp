@@ -17,12 +17,11 @@ typedef struct GLOBAL
 typedef struct LOCAL
 {
   vector<Global> vars;
-  vector<int> postionInFuntion;
   //所属函数
   int funtionPos;
   //父域，-1表示父域为全局变量，其余为Lmap下表
   int upRange;
-  LOCAL(int funtionPos, int upRange) : vars(), postionInFuntion(), funtionPos(funtionPos), upRange(upRange) {}
+  LOCAL(int funtionPos, int upRange) : vars(), funtionPos(funtionPos), upRange(upRange) {}
 } Local;
 vector<Local> Lmap;
 typedef struct FUNTION
