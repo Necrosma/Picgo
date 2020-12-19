@@ -205,3 +205,11 @@ void checkVarType(Global var, int* retType)
   else
     error(99, token);
 }
+
+void checkDefine(int rangePos, string name){
+  for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
+  {
+    if (Lmap[rangePos].vars[i].name == name)
+      error(99, token);
+  }
+}

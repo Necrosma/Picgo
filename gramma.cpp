@@ -229,55 +229,43 @@ void const_decl_stmt(int funtionPos, int rangePos)
   Global tempVar(preToken, token, true);
   int varPos = 0;
   //查重后放入符号表
-  if (funtionPos == 0)
-  {
-    printf("\n== %d ==\n",rangePos);
-    //全局变量查重
-    for (int i = 0; i < Lmap[0].vars.size(); i++)
-    {
-      if (Lmap[0].vars[i].name == tempVar.name)
-        error(99, token);
-    }
-    varPos = Lmap[0].vars.size();
-    Lmap[0].vars.push_back(tempVar);
-  }
-  else
-  {
-    //所在域查重
-    for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
-    {
-      if (Lmap[rangePos].vars[i].name == tempVar.name)
-        error(99, token);
-    }
-    // if (Lmap[rangePos].upRange == -1)
+  // if (funtionPos == 0)
+  // {
+    // //全局变量查重
+    // for (int i = 0; i < Lmap[0].vars.size(); i++)
     // {
-    //   //和函数参数查重
-    //   for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
-    //   {
-    //     if (Fmap[funtionPos].params[i].name == tempVar.name)
-    //       error(99, token);
-    //   }
+    //   if (Lmap[0].vars[i].name == tempVar.name)
+    //     error(99, token);
     // }
-    varPos = Fmap[funtionPos].localSlotNum++;
+    // varPos = Lmap[0].vars.size();
+    // Lmap[0].vars.push_back(tempVar);
+  // }
+  // else
+  // {
+    //所在域查重
+    checkDefine(rangePos,tempVar.name);
+    // for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
+    // {
+    //   if (Lmap[rangePos].vars[i].name == tempVar.name)
+    //     error(99, token);
+    // }
+    // varPos = Fmap[funtionPos].localSlotNum++;
+    // Lmap[rangePos].vars.push_back(tempVar);
+    if(funtionPos == 0)
+      varPos = Lmap[0].vars.size();
+    else 
+      varPos = Fmap[funtionPos].localSlotNum++;
     Lmap[rangePos].vars.push_back(tempVar);
-  }
+  // }
 
   getsym(); // =
   check(ASSIGN);
 
-  if (funtionPos == 0)
-  {
-    //globa
+  if (funtionPos == 0) //global
     F_instruction(funtionPos,0x0c);
-    pushIns(varPos, Fmap[funtionPos].instructions);
-  }
-  else
-  {
-    //loca
+  else //loca
     F_instruction(funtionPos,0x0a);
-    pushIns(varPos, Fmap[funtionPos].instructions);
-  }
-  
+  pushIns(varPos, Fmap[funtionPos].instructions);
 
   getsym();
   expr(funtionPos, rangePos, &retType); // ;
@@ -307,40 +295,36 @@ void let_decl_stmt(int funtionPos, int rangePos)
     error(99, token);
   Global tempVar(preToken, token, false);
   int varPos = 0;
-  //查重后放入符号表
-  if (funtionPos == 0)
-  {
-    //全局变量查重
-    for (int i = 0; i < Lmap[0].vars.size(); i++)
-    {
-      if (Lmap[0].vars[i].name == tempVar.name)
-        error(99, token);
-    }
+
+  checkDefine(rangePos,tempVar.name);
+  if(funtionPos == 0)
     varPos = Lmap[0].vars.size();
-    Lmap[0].vars.push_back(tempVar);
-  }
-  else
-  {
-    //所在域查重
-    for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
-    {
-      // if (Lmap[rangePos].vars[i].dataType == "string")
-      //   continue;
-      if (Lmap[rangePos].vars[i].name == tempVar.name)
-        error(99, token);
-    }
-    // if (Lmap[rangePos].upRange == -1)
-    // {
-    //   //和函数参数查重
-    //   for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
-    //   {
-    //     if (Fmap[funtionPos].params[i].name == tempVar.name)
-    //       error(99, token);
-    //   }
-    // }
+  else 
     varPos = Fmap[funtionPos].localSlotNum++;
-    Lmap[rangePos].vars.push_back(tempVar);
-  }
+  Lmap[rangePos].vars.push_back(tempVar);
+  //查重后放入符号表
+  // if (funtionPos == 0)
+  // {
+  //   //全局变量查重
+  //   for (int i = 0; i < Lmap[0].vars.size(); i++)
+  //   {
+  //     if (Lmap[0].vars[i].name == tempVar.name)
+  //       error(99, token);
+  //   }
+  //   varPos = Lmap[0].vars.size();
+  //   Lmap[0].vars.push_back(tempVar);
+  // }
+  // else
+  // {
+  //   //所在域查重
+  //   for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
+  //   {
+  //     if (Lmap[rangePos].vars[i].name == tempVar.name)
+  //       error(99, token);
+  //   }
+  //   varPos = Fmap[funtionPos].localSlotNum++;
+  //   Lmap[rangePos].vars.push_back(tempVar);
+  // }
 
   getsym(); // = | ;
   if (symId == ASSIGN)
