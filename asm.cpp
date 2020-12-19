@@ -187,6 +187,8 @@ void checkVarType(string type, int* retType)
     if (*retType == 0)
       *retType = 3;
   }
+  else if (type == "string")
+    ;
   else
     error(99, token);
 }
