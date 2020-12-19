@@ -231,6 +231,7 @@ void const_decl_stmt(int funtionPos, int rangePos)
   //查重后放入符号表
   if (funtionPos == 0)
   {
+    printf("\n== %d ==\n",rangePos);
     //全局变量查重
     for (int i = 0; i < Lmap[0].vars.size(); i++)
     {
@@ -248,15 +249,15 @@ void const_decl_stmt(int funtionPos, int rangePos)
       if (Lmap[rangePos].vars[i].name == tempVar.name)
         error(99, token);
     }
-    if (Lmap[rangePos].upRange == -1)
-    {
-      //和函数参数查重
-      for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
-      {
-        if (Fmap[funtionPos].params[i].name == tempVar.name)
-          error(99, token);
-      }
-    }
+    // if (Lmap[rangePos].upRange == -1)
+    // {
+    //   //和函数参数查重
+    //   for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
+    //   {
+    //     if (Fmap[funtionPos].params[i].name == tempVar.name)
+    //       error(99, token);
+    //   }
+    // }
     varPos = Fmap[funtionPos].localSlotNum++;
     Lmap[rangePos].vars.push_back(tempVar);
   }
@@ -328,15 +329,15 @@ void let_decl_stmt(int funtionPos, int rangePos)
       if (Lmap[rangePos].vars[i].name == tempVar.name)
         error(99, token);
     }
-    if (Lmap[rangePos].upRange == -1)
-    {
-      //和函数参数查重
-      for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
-      {
-        if (Fmap[funtionPos].params[i].name == tempVar.name)
-          error(99, token);
-      }
-    }
+    // if (Lmap[rangePos].upRange == -1)
+    // {
+    //   //和函数参数查重
+    //   for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
+    //   {
+    //     if (Fmap[funtionPos].params[i].name == tempVar.name)
+    //       error(99, token);
+    //   }
+    // }
     varPos = Fmap[funtionPos].localSlotNum++;
     Lmap[rangePos].vars.push_back(tempVar);
   }
