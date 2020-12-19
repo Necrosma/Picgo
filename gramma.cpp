@@ -16,17 +16,18 @@ using namespace std;
 
 void parse();
 void function();
-void let_decl_stmt(int funtionPos, int rangePos);
-void const_decl_stmt(int funtionPos, int rangePos);
-void stmt(int funtionPos, int rangePos);
-void if_stmt(int funtionPos, int rangePos);
-void while_stmt(int funtionPos, int rangePos);
-void break_stmt(int funtionPos, int rangePos);
-void continue_stmt(int funtionPos, int rangePos);
-void return_stmt(int funtionPos, int rangePos);
+void let_decl_stmt(int funtionPos,int rangePos);
+void const_decl_stmt(int funtionPos,int rangePos);
+void stmt(int funtionPos);
+void if_stmt(int funtionPos);
+void while_stmt(int funtionPos);
+void break_stmt(int funtionPos);
+void continue_stmt(int funtionPos);
+void return_stmt(int funtionPos);
 void block_stmt(int funtionPos, int upRange);
-void expr(int funtionPos, int rangePos, int *retType);
+void expr(int funtionPos, int *retType);
 
+int rangePos;
 /*===========================================/
 Utils
 /===========================================*/
@@ -158,7 +159,7 @@ void function()
 */
 void block_stmt(int funtionPos, int upRange)
 {
-  int rangePos = Lmap.size();
+  rangePos = Lmap.size();
   Lmap.push_back(Local(funtionPos, upRange));
 
   check(L_BRACE);
@@ -167,19 +168,19 @@ void block_stmt(int funtionPos, int upRange)
   while (true)
   {
     if (symId == CONST_KW)
-      const_decl_stmt(funtionPos, rangePos);
+      const_decl_stmt(funtionPos,rangePos);
     else if (symId == LET_KW)
-      let_decl_stmt(funtionPos, rangePos);
+      let_decl_stmt(funtionPos,rangePos);
     else if (symId == IF_KW)
-      if_stmt(funtionPos, rangePos);
+      if_stmt(funtionPos);
     else if (symId == WHILE_KW)
-      while_stmt(funtionPos, rangePos);
+      while_stmt(funtionPos);
     else if (symId == BREAK_KW)
       error(99,token);
     else if (symId == CONTINUE_KW)
       error(99,token);
     else if (symId == RETURN_KW)
-      return_stmt(funtionPos, rangePos);
+      return_stmt(funtionPos);
     else if (symId == SEMICOLON)
       getsym();
     else if (symId == L_BRACE)
@@ -187,7 +188,7 @@ void block_stmt(int funtionPos, int upRange)
     else if (isExpr())
     {
       int retType = 0;
-      expr(funtionPos, rangePos, &retType);
+      expr(funtionPos, &retType);
       if (retType != 3)
       {
         //popn
@@ -243,7 +244,7 @@ void const_decl_stmt(int funtionPos, int rangePos)
   pushIns(varPos, Fmap[funtionPos].instructions);
 
   getsym();
-  expr(funtionPos, rangePos, &retType); // ;
+  expr(funtionPos,&retType); // ;
   F_instruction(funtionPos,0x17); //store64
   
   check(SEMICOLON);
@@ -287,7 +288,7 @@ void let_decl_stmt(int funtionPos, int rangePos)
     pushIns(varPos, Fmap[funtionPos].instructions);
 
     getsym();
-    expr(funtionPos, rangePos, &retType); // ;
+    expr(funtionPos, &retType); // ;
     F_instruction(funtionPos,0x17); //store64
     
   }
@@ -295,11 +296,11 @@ void let_decl_stmt(int funtionPos, int rangePos)
   getsym();
 }
 //if_stmt -> 'if' expr block_stmt ('else' block_stmt|if_stmt)?
-void if_stmt(int funtionPos, int rangePos)
+void if_stmt(int funtionPos)
 {
   int retType = 0;
   getsym();
-  expr(funtionPos, rangePos, &retType); // {
+  expr(funtionPos, &retType); // {
   //brtrue(1)
   F_instruction(funtionPos,0x43);
   pushIns(1, Fmap[funtionPos].instructions);
@@ -325,7 +326,7 @@ void if_stmt(int funtionPos, int rangePos)
     getsym();
     if (symId == IF_KW)
     {
-      if_stmt(funtionPos, rangePos);
+      if_stmt(funtionPos);
     }
     else if (symId == L_BRACE)
     {
@@ -355,7 +356,7 @@ void if_stmt(int funtionPos, int rangePos)
   pushIns(0, Fmap[funtionPos].instructions);
 }
 /* 'while' expr block_stmt */
-void while_stmt(int funtionPos, int rangePos)
+void while_stmt(int funtionPos)
 {
   int retType = 0;
   //br(0)
@@ -364,7 +365,7 @@ void while_stmt(int funtionPos, int rangePos)
   pushIns(0, Fmap[funtionPos].instructions);
   int whileNum = Fmap[funtionPos].insNum;
   getsym();
-  expr(funtionPos, rangePos, &retType); // {
+  expr(funtionPos, &retType); // {
                                         //brtrue(1)
   F_instruction(funtionPos,0x43);
   pushIns(1, Fmap[funtionPos].instructions);
@@ -400,7 +401,7 @@ void while_stmt(int funtionPos, int rangePos)
   // }
 }
 /* 'return' expr? ';' */
-void return_stmt(int funtionPos, int rangePos)
+void return_stmt(int funtionPos)
 {
   getsym();
   if (symId != SEMICOLON)
@@ -417,7 +418,7 @@ void return_stmt(int funtionPos, int rangePos)
       retType = 2;
     else
       error(99, token);
-    expr(funtionPos, rangePos, &retType);
+    expr(funtionPos, &retType);
     //store64
     F_instruction(funtionPos,0x17);
     
@@ -451,19 +452,19 @@ high_expr -> medium_expr(加减运算符medium_expr)*
 medium_expr -> low_expr(乘除运算符low_expr)*
 //应先预读到IDENT、'-'、'('、literal 才进入analyseExpr
 */
-void HighExpr(int funtionPos, int rangePos, int *retType);
-void MediumExpr(int funtionPos, int rangePos, int *retType);
-void LowExpr(int funtionPos, int rangePos, int *retType);
-void CallParamList(int funtionPos, int rangePos, int callFuntionPos);
-void expr(int funtionPos, int rangePos, int *retType)
+void HighExpr(int funtionPos, int *retType);
+void MediumExpr(int funtionPos, int *retType);
+void LowExpr(int funtionPos, int *retType);
+void CallParamList(int funtionPos, int callFuntionPos);
+void expr(int funtionPos, int *retType)
 {
-  HighExpr(funtionPos, rangePos, retType);
+  HighExpr(funtionPos, retType);
   while (true)
   {
     if (symId == LT)
     {
       getsym();
-      HighExpr(funtionPos, rangePos, retType);
+      HighExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
       else
@@ -474,7 +475,7 @@ void expr(int funtionPos, int rangePos, int *retType)
     else if (symId == LE)
     {
       getsym();
-      HighExpr(funtionPos, rangePos, retType);
+      HighExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
       else
@@ -486,7 +487,7 @@ void expr(int funtionPos, int rangePos, int *retType)
     else if (symId == GT)
     {
       getsym();
-      HighExpr(funtionPos, rangePos, retType);
+      HighExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
       else
@@ -498,7 +499,7 @@ void expr(int funtionPos, int rangePos, int *retType)
     else if (symId == GE)
     {
       getsym();
-      HighExpr(funtionPos, rangePos, retType);
+      HighExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
       else
@@ -511,7 +512,7 @@ void expr(int funtionPos, int rangePos, int *retType)
     else if (symId == EQ)
     {
       getsym();
-      HighExpr(funtionPos, rangePos, retType);
+      HighExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
       else
@@ -523,7 +524,7 @@ void expr(int funtionPos, int rangePos, int *retType)
     else if (symId == NEQ)
     {
       getsym();
-      HighExpr(funtionPos, rangePos, retType);
+      HighExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
       else
@@ -535,15 +536,15 @@ void expr(int funtionPos, int rangePos, int *retType)
   }
 }
 
-void HighExpr(int funtionPos, int rangePos, int *retType)
+void HighExpr(int funtionPos, int *retType)
 {
-  MediumExpr(funtionPos, rangePos, retType);
+  MediumExpr(funtionPos,  retType);
   while (true)
   {
     if (symId == PLUS)
     {
       getsym();
-      MediumExpr(funtionPos, rangePos, retType);
+      MediumExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x20);
       else if (*retType == 2)
@@ -554,7 +555,7 @@ void HighExpr(int funtionPos, int rangePos, int *retType)
     else if (symId == MINUS)
     {
       getsym();
-      MediumExpr(funtionPos, rangePos, retType);
+      MediumExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x21);
       else if (*retType == 2)
@@ -567,15 +568,15 @@ void HighExpr(int funtionPos, int rangePos, int *retType)
   }
 }
 
-void MediumExpr(int funtionPos, int rangePos, int *retType)
+void MediumExpr(int funtionPos, int *retType)
 {
-  LowExpr(funtionPos, rangePos, retType);
+  LowExpr(funtionPos, retType);
   while (true)
   {
     if (symId == MUL)
     {
       getsym();
-      LowExpr(funtionPos, rangePos, retType);
+      LowExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x22);
       else if (*retType == 2)
@@ -584,7 +585,7 @@ void MediumExpr(int funtionPos, int rangePos, int *retType)
     else if (symId == DIV)
     {
       getsym();
-      LowExpr(funtionPos, rangePos, retType);
+      LowExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x23);
       else if (*retType == 2)
@@ -595,7 +596,7 @@ void MediumExpr(int funtionPos, int rangePos, int *retType)
   }
 }
 
-void LowExpr(int funtionPos, int rangePos, int *retType)
+void LowExpr(int funtionPos, int *retType)
 {
   if (symId == IDENT)
   {
@@ -669,7 +670,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       }
       else
       {
-        CallParamList(funtionPos, rangePos, callFuntionPos);
+        CallParamList(funtionPos, callFuntionPos);
         F_instruction(funtionPos,0x48);
         pushIns(callFuntionPos, Fmap[funtionPos].instructions);
         check(R_PAREN);
@@ -725,7 +726,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       }
       
       getsym(); //expr
-      expr(funtionPos, rangePos, &varType);
+      expr(funtionPos, &varType);
       if (*retType == 0)
         *retType = 3;
       F_instruction(funtionPos,0x17); //store64
@@ -838,7 +839,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       error(99, token);
     getsym(); //expr
     int retT = 0;
-    expr(funtionPos, rangePos, &retT);
+    expr(funtionPos, &retT);
     if (retT == 1)
     {
       F_instruction(funtionPos,0x34);
@@ -856,7 +857,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     else
     {
       printf("%d ", retT);
-      // puts("Minus expr");
       error(99, token);
     }
   }
@@ -864,7 +864,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
   { // '(' expr ')'
     getsym();
     if (isExpr())
-      expr(funtionPos, rangePos, retType);
+      expr(funtionPos, retType);
     else
       error(99, token);
     check(R_PAREN);
@@ -931,7 +931,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     check(L_PAREN);
     //int
     getsym();
-    expr(funtionPos, rangePos, &retT);
+    expr(funtionPos, &retT);
     //')'
     check(R_PAREN);
     //print.i
@@ -951,7 +951,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     check(L_PAREN);
     //double
     getsym();
-    expr(funtionPos, rangePos, &retT);
+    expr(funtionPos, &retT);
     //')'
     getsym();
     check(R_PAREN);
@@ -972,7 +972,7 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     check(L_PAREN);
     //int
     getsym();
-    expr(funtionPos, rangePos, &retT);
+    expr(funtionPos, &retT);
     //')'
     check(R_PAREN);
     //print.c
@@ -1038,10 +1038,10 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
 }
 
 // expr (',' expr)* [非空才进入]
-void CallParamList(int funtionPos, int rangePos, int callFuntionPos)
+void CallParamList(int funtionPos, int callFuntionPos)
 {
   int retType = 0;
-  expr(funtionPos, rangePos, &retType);
+  expr(funtionPos, &retType);
   if (retType == 1)
   {
     if (Fmap[callFuntionPos].params[0].dataType != "int")
@@ -1066,7 +1066,7 @@ void CallParamList(int funtionPos, int rangePos, int callFuntionPos)
     check(COMMA);
     getsym();
     retType = 0;
-    expr(funtionPos, rangePos, &retType);
+    expr(funtionPos, &retType);
     if (retType == 1)
     {
       if (Fmap[callFuntionPos].params[i].dataType != "int")
