@@ -552,14 +552,9 @@ void expr(int funtionPos, int rangePos, int *retType)
       HighExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
-        // F_instruction(funtionPos,0x30);
       else
         F_instruction(funtionPos,0x32);
-        // F_instruction(funtionPos,0x32);
-      // 
       F_instruction(funtionPos,0x39);
-      // F_instruction(funtionPos,0x39);
-      // 
       *retType = 4;
     }
     else if (symId == LE)
@@ -570,11 +565,8 @@ void expr(int funtionPos, int rangePos, int *retType)
         F_instruction(funtionPos,0x30);
       else
         F_instruction(funtionPos,0x32);
-      
       F_instruction(funtionPos,0x3a);
-      
       F_instruction(funtionPos,0x2e);
-      
       *retType = 4;
     }
     else if (symId == GT)
@@ -585,7 +577,6 @@ void expr(int funtionPos, int rangePos, int *retType)
         F_instruction(funtionPos,0x30);
       else
         F_instruction(funtionPos,0x32);
-      
       F_instruction(funtionPos,0x3a);
       
       *retType = 4;
@@ -598,9 +589,7 @@ void expr(int funtionPos, int rangePos, int *retType)
         F_instruction(funtionPos,0x30);
       else
         F_instruction(funtionPos,0x32);
-      
       F_instruction(funtionPos,0x39);
-      
       F_instruction(funtionPos,0x2e);
       
       *retType = 4;
@@ -613,7 +602,6 @@ void expr(int funtionPos, int rangePos, int *retType)
         F_instruction(funtionPos,0x30);
       else
         F_instruction(funtionPos,0x32);
-      
       F_instruction(funtionPos,0x2e);
       
       *retType = 4;
@@ -625,8 +613,7 @@ void expr(int funtionPos, int rangePos, int *retType)
       if (*retType == 1)
         F_instruction(funtionPos,0x30);
       else
-        F_instruction(funtionPos,0x32);
-      
+        F_instruction(funtionPos,0x32);  
       *retType = 4;
     }
     else
@@ -644,15 +631,9 @@ void HighExpr(int funtionPos, int rangePos, int *retType)
       getsym();
       MediumExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-      {
         F_instruction(funtionPos,0x20);
-        
-      }
       else if (*retType == 2)
-      {
         F_instruction(funtionPos,0x24);
-        
-      }
       else
         error(99, token);
     }
@@ -661,15 +642,9 @@ void HighExpr(int funtionPos, int rangePos, int *retType)
       getsym();
       MediumExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-      {
         F_instruction(funtionPos,0x21);
-        
-      }
       else if (*retType == 2)
-      {
         F_instruction(funtionPos,0x25);
-        
-      }
       else
         error(99, token);
     }
@@ -688,30 +663,18 @@ void MediumExpr(int funtionPos, int rangePos, int *retType)
       getsym();
       LowExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-      {
         F_instruction(funtionPos,0x22);
-        
-      }
       else if (*retType == 2)
-      {
         F_instruction(funtionPos,0x26);
-        
-      }
     }
     else if (symId == DIV)
     {
       getsym();
       LowExpr(funtionPos, rangePos, retType);
       if (*retType == 1)
-      {
         F_instruction(funtionPos,0x23);
-        
-      }
       else if (*retType == 2)
-      {
         F_instruction(funtionPos,0x27);
-        
-      }
     }
     else
       break;
@@ -756,7 +719,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       }
       else if (Fmap[callFuntionPos].retType == "int")
       {
-        // printf("%d\n", *retType);
         //找到的函数返回值不是要求的返回值
         if (*retType != 0 && *retType != 1)
           error(99, token);
@@ -789,7 +751,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       {           // 空列表
         F_instruction(funtionPos,0x48);
         pushIns(callFuntionPos, Fmap[funtionPos].instructions);
-        
         getsym(); // read next
       }
       else
@@ -797,8 +758,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         CallParamList(funtionPos, rangePos, callFuntionPos);
         F_instruction(funtionPos,0x48);
         pushIns(callFuntionPos, Fmap[funtionPos].instructions);
-        
-
         check(R_PAREN);
         getsym(); // read next
       }
@@ -821,29 +780,10 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         if(i!=-1){
           local = true;
           F_instruction(funtionPos,0x0a);
-          pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
+          // pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
+          pushIns(i, Fmap[funtionPos].instructions);
           break;
         }
-        // for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
-        // {
-        //   if (preToken == Lmap[tempRangePos].vars[i].name)
-        //   {
-        //     if (Lmap[tempRangePos].vars[i].is_const)
-        //       error(99, token);
-        //     if (Lmap[tempRangePos].vars[i].dataType == "int")
-        //       varType = 1;
-        //     else if (Lmap[tempRangePos].vars[i].dataType == "double")
-        //       varType = 2;
-        //     else
-        //       error(99, token);
-        //     local = true;
-        //     //loca()
-        //     F_instruction(funtionPos,0x0a);
-        //     pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
-            
-        //     break;
-        //   }
-        // }
         tempRangePos = Lmap[tempRangePos].upRange;
       }
       //函数的参数
@@ -858,29 +798,6 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           else
             pushIns(i + 1, Fmap[funtionPos].instructions);
         }
-        // for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
-        // {
-        //   if (preToken == Fmap[funtionPos].params[i].name)
-        //   {
-        //     if (Fmap[funtionPos].params[i].is_const)
-        //       error(99, token);
-        //     if (Fmap[funtionPos].params[i].dataType == "int")
-        //       varType = 1;
-        //     else if (Fmap[funtionPos].params[i].dataType == "double")
-        //       varType = 2;
-        //     else
-        //       error(99, token);
-        //     param = true;
-        //     //arga()
-        //     F_instruction(funtionPos,0x0b);
-        //     if (Fmap[funtionPos].retType == "void")
-        //       pushIns(i, Fmap[funtionPos].instructions);
-        //     else
-        //       pushIns(i + 1, Fmap[funtionPos].instructions);
-            
-        //     break;
-        //   }
-        // }
       }
       //全局变量
       if (!local && !param)
@@ -915,7 +832,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         if(i != -1){
           local = true;
           F_instruction(funtionPos,0x0a);
-          pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
+          // pushIns(Lmap[tempRangePos].postionInFuntion[i], Fmap[funtionPos].instructions);
+          pushIns(i, Fmap[funtionPos].instructions);
           break;
         }
         tempRangePos = Lmap[tempRangePos].upRange;
@@ -947,13 +865,10 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
         error(99, token);
       //load64
       F_instruction(funtionPos,0x13);
-      
-      // getsym(); 无需向后读，因为已预读了一个
     }
   }
   else if (symId == UINT_LITERAL)
   {
-    // printf("[LOGGER] UINT: %lf\n", num);
     //要求该lowexpr的返回类型不是int
     if (*retType != 0 && *retType != 1)
       error(99, token);
@@ -1377,6 +1292,14 @@ void parse()
     cout<<hex<<(int)instructions[i];
     if(!(n%2) && n%16) cout<<' ';
     if(!(n%16)) cout<<'\n';
+  }
+
+  for(int i=0;i<Lmap.size();++i){
+    puts("");
+    for(int j=0;j<Lmap[i].postionInFuntion.size();++j){
+      int a = Lmap[i].postionInFuntion[j];
+      printf("%d ",a);
+    }
   }
   fwrite(str.c_str(), str.size(), 1, outFile);
 }
