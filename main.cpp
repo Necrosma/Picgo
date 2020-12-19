@@ -7,11 +7,11 @@
 using namespace std;
 int main(int argc,char** argv)
 {
-    src.open("src.txt", ios::in);
-    outFile = fopen("out.txt","wt");
+    // src.open("src.txt", ios::in);
+    // outFile = fopen("out.txt","wt");
 
-    // outFile = fopen(argv[3],"wt");
-    // src.open(argv[1], ios::in);
+    outFile = fopen(argv[3],"wt");
+    src.open(argv[1], ios::in);
     
     streampos pos =src.tellg();
     src.seekg(0,ios::end);
