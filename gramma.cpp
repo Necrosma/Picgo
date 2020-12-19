@@ -56,6 +56,7 @@ void program()
   Fmap[0].retType = "void";
   //默认Fmap[1]是main
   Fmap.push_back(Funtion("main"));
+  Lmap.push_back(Local(0, -1)); //todo
   while (true)
   {
     if (symId == FN_KW)
@@ -145,7 +146,7 @@ void function()
     error(99, token);
 
   getsym();
-  block_stmt(funtionPos, -1);
+  block_stmt(funtionPos, 0);
   //默认ret
   F_instruction(funtionPos,0x49);
   
@@ -229,15 +230,15 @@ void const_decl_stmt(int funtionPos, int rangePos)
   if (funtionPos == 0)
   {
     //全局变量查重
-    for (int i = 0; i < Gmap.size(); i++)
+    for (int i = 0; i < Lmap[0].vars.size(); i++)
     {
-      if (Gmap[i].dataType == "string")
+      if (Lmap[0].vars[i].dataType == "string")
         continue;
-      else if (Gmap[i].name == tempVar.name)
+      else if (Lmap[0].vars[i].name == tempVar.name)
         error(99, token);
     }
-    varPos = Gmap.size();
-    Gmap.push_back(tempVar);
+    varPos = Lmap[0].vars.size();
+    Lmap[0].vars.push_back(tempVar);
   }
   else
   {
@@ -315,15 +316,15 @@ void let_decl_stmt(int funtionPos, int rangePos)
   if (funtionPos == 0)
   {
     //全局变量查重
-    for (int i = 0; i < Gmap.size(); i++)
+    for (int i = 0; i < Lmap[0].vars.size(); i++)
     {
-      if (Gmap[i].dataType == "string")
+      if (Lmap[0].vars[i].dataType == "string")
         continue;
-      else if (Gmap[i].name == tempVar.name)
+      else if (Lmap[0].vars[i].name == tempVar.name)
         error(99, token);
     }
-    varPos = Gmap.size();
-    Gmap.push_back(tempVar);
+    varPos = Lmap[0].vars.size();
+    Lmap[0].vars.push_back(tempVar);
   }
   else
   {
@@ -893,17 +894,17 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //全局变量
       if (!local && !param)
       {
-        for (int i = 0; i < Gmap.size(); i++)
+        for (int i = 0; i < Lmap[0].vars.size(); i++)
         {
-          if (Gmap[i].dataType != "string")
+          if (Lmap[0].vars[i].dataType != "string")
           {
-            if (preToken == Gmap[i].name)
+            if (preToken == Lmap[0].vars[i].name)
             {
-              if (Gmap[i].is_const)
+              if (Lmap[0].vars[i].is_const)
                 error(99, token);
-              if (Gmap[i].dataType == "int")
+              if (Lmap[0].vars[i].dataType == "int")
                 varType = 1;
-              else if (Gmap[i].dataType == "double")
+              else if (Lmap[0].vars[i].dataType == "double")
                 varType = 2;
               else
                 error(99, token);
@@ -1075,28 +1076,28 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
       //全局变量
       if (!local && !param)
       {
-        for (int i = 0; i < Gmap.size(); i++)
+        for (int i = 0; i < Lmap[0].vars.size(); i++)
         {
-          if (Gmap[i].dataType != "string")
+          if (Lmap[0].vars[i].dataType != "string")
           {
-            if (preToken == Gmap[i].name)
+            if (preToken == Lmap[0].vars[i].name)
             {
 
-              if (Gmap[i].dataType == "int")
+              if (Lmap[0].vars[i].dataType == "int")
               {
                 if (*retType != 0 && *retType != 1)
                   error(99, token);
                 if (*retType == 0)
                   *retType = 1;
               }
-              else if (Gmap[i].dataType == "double")
+              else if (Lmap[0].vars[i].dataType == "double")
               {
                 if (*retType != 0 && *retType != 2)
                   error(99, token);
                 if (*retType == 0)
                   *retType = 2;
               }
-              else if (Gmap[i].dataType == "void")
+              else if (Lmap[0].vars[i].dataType == "void")
               {
                 if (*retType != 0 && *retType != 3)
                   error(99, token);
@@ -1158,8 +1159,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     if (*retType != 0 && *retType != 1)
       error(99, token);
     Global temp = Global(token, "string", true);
-    int64_t tempNum = Gmap.size();
-    Gmap.push_back(temp);
+    int64_t tempNum = Lmap[0].vars.size();
+    Lmap[0].vars.push_back(temp);
     Fmap[0].instructions.push_back(0x01);
     pushIns(tempNum, Fmap[0].instructions);
     Fmap[0].insNum++;
@@ -1343,8 +1344,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
     if (symId != STRING_LITERAL)
       error(99,token);
     Global temp = Global(token, "string", true);
-    int64_t tempNum = Gmap.size();
-    Gmap.push_back(temp);
+    int64_t tempNum = Lmap[0].vars.size();
+    Lmap[0].vars.push_back(temp);
     F_instruction(funtionPos,0x01);
     pushIns(tempNum, Fmap[funtionPos].instructions);
     
@@ -1449,28 +1450,28 @@ void parse()
   init_start(); //_start的指令集
   //Array<GlobalDef>：全局变量常量（全设为0），字符串字面量，函数名
   //Array<GlobalDef>.count
-  int globalNum = Gmap.size() + Fmap.size();
+  int globalNum = Lmap[0].vars.size() + Fmap.size();
   pushIns(globalNum, instructions);
   //Array<GlobalDef>.item 全局变量部分（包括字符串字面量和标准库函数）
-  for (int i = 0; i < Gmap.size(); i++)
+  for (int i = 0; i < Lmap[0].vars.size(); i++)
   {
-    if (Gmap[i].dataType == "string")
+    if (Lmap[0].vars[i].dataType == "string")
     {
       //Array<GlobalDef>.item[i].is_const = 1
       instructions.push_back(0x01);
-      int arrayNum = Gmap[i].name.size();
+      int arrayNum = Lmap[0].vars[i].name.size();
       //Array<GlobalDef>.item[i].value.count
       pushIns(arrayNum, instructions);
       for (int j = 0; j < arrayNum; j++)
       {
         //Array<GlobalDef>.item[i].value.item[j]
-        instructions.push_back(Gmap[i].name[j]);
+        instructions.push_back(Lmap[0].vars[i].name[j]);
       }
     }
-    else if (Gmap[i].dataType == "int" || Gmap[i].dataType == "double")
+    else if (Lmap[0].vars[i].dataType == "int" || Lmap[0].vars[i].dataType == "double")
     {
       //Array<GlobalDef>.item[i].is_const
-      if (Gmap[i].is_const)
+      if (Lmap[0].vars[i].is_const)
         instructions.push_back(0x01);
       else
         instructions.push_back(0x00);
@@ -1489,15 +1490,15 @@ void parse()
   //Array<GlobalDef>.item 函数部分
   for (int i = 0; i < Fmap.size(); i++)
   {
-    Fmap[i].pos = Gmap.size() + i;
-    //Array<GlobalDef>.item[Gmap.size()+i].is_const = 1
+    Fmap[i].pos = Lmap[0].vars.size() + i;
+    //Array<GlobalDef>.item[Lmap[0].vars.size()+i].is_const = 1
     instructions.push_back(0x01);
     int arrayNum = Fmap[i].name.size();
-    //Array<GlobalDef>.item[Gmap.size()+i].value.count
+    //Array<GlobalDef>.item[Lmap[0].vars.size()+i].value.count
     pushIns(arrayNum, instructions);
     for (int j = 0; j < arrayNum; j++)
     {
-      //Array<GlobalDef>.item[Gmap.size()+i].value.item[j]
+      //Array<GlobalDef>.item[Lmap[0].vars.size()+i].value.item[j]
       instructions.push_back(Fmap[i].name[j]);
     }
   }
