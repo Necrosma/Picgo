@@ -16,8 +16,8 @@ using namespace std;
 
 void parse();
 void function();
-void let_decl_stmt(int funtionPos,int rangePos);
-void const_decl_stmt(int funtionPos,int rangePos);
+void let_decl_stmt(int funtionPos,int rangePos_);
+void const_decl_stmt(int funtionPos,int rangePos_);
 void stmt(int funtionPos);
 void if_stmt(int funtionPos);
 void while_stmt(int funtionPos);
@@ -208,8 +208,9 @@ void block_stmt(int funtionPos, int upRange)
   getsym();
 }
 /* 'const' IDENT ':' ty '=' expr ';' */
-void const_decl_stmt(int funtionPos, int rangePos)
+void const_decl_stmt(int funtionPos, int rangePos_)
 {
+  rangePos = rangePos_;
   getsym(); // IDENT
   check(IDENT);
   string preToken = token;
@@ -251,8 +252,9 @@ void const_decl_stmt(int funtionPos, int rangePos)
   getsym();
 }
 /* 'let' IDENT ':' ty ('=' expr)? ';' */
-void let_decl_stmt(int funtionPos, int rangePos)
+void let_decl_stmt(int funtionPos, int rangePos_)
 {
+  rangePos = rangePos_;
   getsym(); // IDENT
   check(IDENT);
   string preToken = token;
