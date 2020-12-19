@@ -221,42 +221,17 @@ void const_decl_stmt(int funtionPos, int rangePos)
     retType = 1;
   else if (!strcmp(token, "double"))
     retType = 2;
-  else
-  {
-    // puts("定义数据类型不是int或double");
-    error(99, token);
-  }
+  else error(99, token);
+
   Global tempVar(preToken, token, true);
   int varPos = 0;
   //查重后放入符号表
-  // if (funtionPos == 0)
-  // {
-    // //全局变量查重
-    // for (int i = 0; i < Lmap[0].vars.size(); i++)
-    // {
-    //   if (Lmap[0].vars[i].name == tempVar.name)
-    //     error(99, token);
-    // }
-    // varPos = Lmap[0].vars.size();
-    // Lmap[0].vars.push_back(tempVar);
-  // }
-  // else
-  // {
-    //所在域查重
-    checkDefine(rangePos,tempVar.name);
-    // for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
-    // {
-    //   if (Lmap[rangePos].vars[i].name == tempVar.name)
-    //     error(99, token);
-    // }
-    // varPos = Fmap[funtionPos].localSlotNum++;
-    // Lmap[rangePos].vars.push_back(tempVar);
-    if(funtionPos == 0)
-      varPos = Lmap[0].vars.size();
-    else 
-      varPos = Fmap[funtionPos].localSlotNum++;
-    Lmap[rangePos].vars.push_back(tempVar);
-  // }
+  checkDefine(rangePos,tempVar.name);
+  if(funtionPos == 0)
+    varPos = Lmap[0].vars.size();
+  else 
+    varPos = Fmap[funtionPos].localSlotNum++;
+  Lmap[rangePos].vars.push_back(tempVar);
 
   getsym(); // =
   check(ASSIGN);
@@ -269,10 +244,8 @@ void const_decl_stmt(int funtionPos, int rangePos)
 
   getsym();
   expr(funtionPos, rangePos, &retType); // ;
-  //store64
-  F_instruction(funtionPos,0x17);
+  F_instruction(funtionPos,0x17); //store64
   
-
   check(SEMICOLON);
   getsym();
 }
@@ -296,56 +269,26 @@ void let_decl_stmt(int funtionPos, int rangePos)
   Global tempVar(preToken, token, false);
   int varPos = 0;
 
+  //查重后放入符号表
   checkDefine(rangePos,tempVar.name);
   if(funtionPos == 0)
     varPos = Lmap[0].vars.size();
   else 
     varPos = Fmap[funtionPos].localSlotNum++;
   Lmap[rangePos].vars.push_back(tempVar);
-  //查重后放入符号表
-  // if (funtionPos == 0)
-  // {
-  //   //全局变量查重
-  //   for (int i = 0; i < Lmap[0].vars.size(); i++)
-  //   {
-  //     if (Lmap[0].vars[i].name == tempVar.name)
-  //       error(99, token);
-  //   }
-  //   varPos = Lmap[0].vars.size();
-  //   Lmap[0].vars.push_back(tempVar);
-  // }
-  // else
-  // {
-  //   //所在域查重
-  //   for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
-  //   {
-  //     if (Lmap[rangePos].vars[i].name == tempVar.name)
-  //       error(99, token);
-  //   }
-  //   varPos = Fmap[funtionPos].localSlotNum++;
-  //   Lmap[rangePos].vars.push_back(tempVar);
-  // }
 
   getsym(); // = | ;
   if (symId == ASSIGN)
   {
     if (funtionPos == 0)
-    {
-      //globa
       F_instruction(funtionPos,0x0c);
-      pushIns(varPos, Fmap[funtionPos].instructions);
-    }
     else
-    {
-      //loca
       F_instruction(funtionPos,0x0a);
-      pushIns(varPos, Fmap[funtionPos].instructions);
-    }
-    
+    pushIns(varPos, Fmap[funtionPos].instructions);
+
     getsym();
     expr(funtionPos, rangePos, &retType); // ;
-    //store64
-    F_instruction(funtionPos,0x17);
+    F_instruction(funtionPos,0x17); //store64
     
   }
   check(SEMICOLON);
@@ -778,15 +721,14 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           F_instruction(funtionPos,0x0c);
           pushIns(i, Fmap[funtionPos].instructions);
         }
+        else error(99, token);
       }
-      if (!local && !param && !global)
-        error(99, token);
+      
       getsym(); //expr
       expr(funtionPos, rangePos, &varType);
       if (*retType == 0)
         *retType = 3;
-      //store64
-      F_instruction(funtionPos,0x17);
+      F_instruction(funtionPos,0x17); //store64
       
     }
     // 变量调用 IDENT 注：此时以读了下一个token
@@ -829,9 +771,8 @@ void LowExpr(int funtionPos, int rangePos, int *retType)
           F_instruction(funtionPos,0x0c);
           pushIns(i, Fmap[funtionPos].instructions);
         }
+        else error(99, token);
       }
-      if (!local && !param && !global)
-        error(99, token);
       //load64
       F_instruction(funtionPos,0x13);
     }
@@ -1146,9 +1087,8 @@ void CallParamList(int funtionPos, int rangePos, int callFuntionPos)
   }
 }
 
-//前提：将所有符号表搞定
 void parse()
-{ //TODO: 写入文件
+{
   //magic
   instructions.push_back(0x72);
   instructions.push_back(0x30);

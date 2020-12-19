@@ -106,7 +106,7 @@ void pushIns(int16_t x, vector<unsigned char> &instructions)
   instructions.push_back(str[2]);
   instructions.push_back(str[1]);
 }
-bool init_start()
+void init_start()
 {
   //stackalloc(1)
   Fmap[0].instructions.push_back(0x1a);
@@ -129,7 +129,6 @@ bool init_start()
   Fmap[0].instructions.push_back(0x00);
   Fmap[0].instructions.push_back(0x01);
   Fmap[0].insNum++;
-  return true;
 }
 
 void F_instruction(int funtionPos, int n)
