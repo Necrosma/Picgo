@@ -13,6 +13,7 @@
 using namespace std;
 
 void parse();
+void program();
 void function();
 void block_stmt(int upRange);
 void let_stmt(int funPos, int rangePos_);
