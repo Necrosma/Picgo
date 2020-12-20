@@ -3,9 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 using namespace std;
+#define LOAD_ 1
+#define ASSIGN_ 0
+#define INT_ 1
+#define VOID_ 3
+#define BOOL_ 4
 
-// 符号表 =============================================
-//全局变量常量、字符串字面量交错存储，函数在二者之后
+// 符号表 ===================
 typedef struct GLOBAL
 {
   string name;
@@ -138,14 +142,13 @@ void F_instruction(int funtionPos, int n)
   Fmap[funtionPos].insNum++;
 }
 
-int findVar(int tempRangePos, string preToken, int *retType, bool isLoad)
+int findVar(int tempRangePos, string preToken, int *retType, int isLoad)
 {
   for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
   {
     if (preToken == Lmap[tempRangePos].vars[i].name)
     {
-      if(isLoad)
-        checkVarType(Lmap[tempRangePos].vars[i],retType);
+      if(isLoad) checkVarType(Lmap[tempRangePos].vars[i],retType);
       else setVarType(Lmap[tempRangePos].vars[i],retType);
       return i;
     }
@@ -153,7 +156,7 @@ int findVar(int tempRangePos, string preToken, int *retType, bool isLoad)
   return -1;
 }
 
-int findParam(int funtionPos, string preToken, int *retType, bool isLoad)
+int findParam(int funtionPos, string preToken, int *retType, int isLoad)
 {
   for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
   {
@@ -182,24 +185,22 @@ void checkVarType(Global var, int* retType)
 {
   if (var.dataType == "int")
   {
-    if (*retType != 0 && *retType != 1){
+    if (*retType != ASSIGN_ && *retType != 1){
       puts("return isn't int");
       error(99, token);
     }
-    if (*retType == 0)
+    if (*retType == ASSIGN_)
       *retType = 1;
   }
   else if (var.dataType == "void")
   {
-    if (*retType != 0 && *retType != 3){
+    if (*retType != ASSIGN_ && *retType != VOID_){
       puts("return isn't int");
       error(99, token);
     }
-    if (*retType == 0)
-      *retType = 3;
+    if (*retType == ASSIGN_)
+      *retType = VOID_;
   }
-  else if (var.dataType == "string")
-    puts("string type???");
   else{
     puts("checkType unreached ERROR");
     error(99, token);
