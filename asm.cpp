@@ -22,11 +22,6 @@ typedef struct LOCAL
   int funtionPos;
   //全局变量-1 函数0 逐增
   int upRange;
-
-  /*
-    存放待填写的breaks，first是Fmap[funtionPos].instructions[insPos]，代码待填写的位置
-    second是当前指令数，用于被insNum减，得到放入first位置的值
-    */
   LOCAL(int funtionPos, int upRange) : vars(), funtionPos(funtionPos), upRange(upRange) {}
   LOCAL(int funtionPos, int upRange, int isWhile) : vars(), funtionPos(funtionPos), upRange(upRange) {}
 } Local;
@@ -180,8 +175,10 @@ void setVarType(Global param, int* retType){
     *retType = 1;
   else if (param.dataType == "double")
     *retType = 2;
-  else
+  else{
+    puts("setVarType ERROR");
     error(99, token);
+  }
 }
 
 void checkVarType(Global var, int* retType)

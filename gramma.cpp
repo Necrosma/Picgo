@@ -789,8 +789,7 @@ void LowExpr(int funtionPos, int *retType)
   {
     if (*retType != 0 && *retType != 2)
       error(99, token);
-    double tempd = atof(token);
-    int64_t temp = doubleToRawBits(tempd);
+    int64_t temp = doubleToRawBits(num);
     F_instruction(funtionPos,0x01);
     pushIns(temp, Fmap[funtionPos].instructions);
     
@@ -946,7 +945,6 @@ void LowExpr(int funtionPos, int *retType)
     getsym();
     expr(funtionPos, &retT);
     //')'
-    getsym();
     check(R_PAREN);
     //print.f
     F_instruction(funtionPos,0x56);
@@ -1026,34 +1024,7 @@ void LowExpr(int funtionPos, int *retType)
   // as 的部分不管了 TODO
   if(symId == AS_KW){
     error(99,token);
-    // puts("AS IN");
-    // getsym();
-    // check(IDENT);
-
-    // string str;
-    // if (!strcmp(token, "int")){
-    //   if(*retType==2)
-    //     F_instruction(funtionPos,0x37);
-    //   else if((*retType)!=1){
-    //     puts("非 num 转 int ");
-    //     error(99,token);
-    //   }
-    // }
-    // else if (!strcmp(token, "double")){
-    //   if(*retType==1)
-    //     F_instruction(funtionPos,0x36);
-    //   else if((*retType)!=2){
-    //     puts("非 num 转 double ");
-    //     error(99,token);
-    //   }
-    // }
-    // else error(99,token);
-    // getsym();
-  } 
-  // else{ 
-  //   if(flag)
-  //     checkVarType(Lmap[tempRangePos].vars[i],retType);
-  // }
+  }
 }
 
 // expr (',' expr)* [非空才进入]
