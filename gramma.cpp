@@ -24,6 +24,10 @@ void continue_stmt(int funtionPos);
 void return_stmt(int funtionPos);
 void block_stmt(int funtionPos, int upRange);
 void expr(int funtionPos, int *retType);
+void HighExpr(int funtionPos, int *retType);
+void MediumExpr(int funtionPos, int *retType);
+void LowExpr(int funtionPos, int *retType);
+void CallParamList(int funtionPos, int callFuntionPos);
 
 int rangePos;
 /*===========================================/
@@ -34,7 +38,7 @@ void check(int id)
   if (symId != id)
   {
     printf("Excepted Id: %d, Actual Id: %d\n", id, symId);
-    error(99, token);
+    error(GRAMMER_ERROR, token);
   }
 }
 bool isExpr()
@@ -52,12 +56,6 @@ Functions
 /===========================================*/
 void program()
 {
-  //默认Fmap[0]是_start
-  Fmap.push_back(Funtion("_start"));
-  Fmap[0].retType = "void";
-  //默认Fmap[1]是main
-  Fmap.push_back(Funtion("main"));
-  Lmap.push_back(Local(0, -1)); //todo
   while (true)
   {
     if (symId == FN_KW)
@@ -71,37 +69,32 @@ void program()
   }
 }
 
-//function -> 'fn' IDENT '(' function_param_list? ')' '->' ty block_stmt
-//function_param_list -> function_param (',' function_param)*
-//function_param -> 'const'? IDENT ':' ty
 void function()
 {
   int funtionPos = Fmap.size();
   getsym();
   check(IDENT);
-  if (!strcmp(token, "main")) //确定位置
+  if (!strcmp(token, "main")) 
     funtionPos = 1;
-  else //重名检查
-  {
-    for (int i = 0; i < Fmap.size(); i++)
-      if (!strcmp(token, Fmap[i].name.c_str()))
-        error(99, token);
+  else { 
+    string str = token;
+    if(findFun(str) >= 0) error(DUL_FUN,token);
     Fmap.push_back(Funtion(token));
   }
 
   getsym();
   check(L_PAREN);
 
-  getsym(); // CONST | IDENT | ')'
-  /*----- function_param_list -----*/
+  getsym();
+  /*======= function_param_list =======*/
   if (symId == CONST_KW || symId == IDENT)
   {
     vector<Global> tempParams;
     do
     {
       if (symId == COMMA)
-        getsym(); //TODO fn(,a,b)
-      /*----- function_param -----*/
+        getsym();
+      /*======= function_param =======*/
       Global tempParam;
       tempParam.is_const = false;
       if (symId == CONST_KW)
@@ -116,10 +109,10 @@ void function()
       check(COLON);
       getsym(); // ty
       check(IDENT);
-      if (!strcmp(token, "int") || !strcmp(token, "double") || !strcmp(token, "void"))
+      if (!strcmp(token, "int") || !strcmp(token, "void"))
         tempParam.dataType = token;
       else
-        error(99, token);
+        error(UNMATCH_TYPE, token);
       tempParams.push_back(tempParam);
       getsym(); // ',' | ')'
     } while (symId == COMMA);
@@ -129,28 +122,22 @@ void function()
   }
   //null_list
   check(R_PAREN);
-
-  getsym(); // ->
+  getsym();
   check(ARROW);
-
-  getsym(); // ty
+  getsym();
   check(IDENT);
-  if (!strcmp(token, "int") || !strcmp(token, "void")){
+  if (!strcmp(token, "int") || !strcmp(token, "void"))
     Fmap[funtionPos].retType = token;
-  }
-  else
-    error(99, token);
+  else error(UNMATCH_TYPE, token);
 
   getsym();
-  //函数父域为全局变量，0
   block_stmt(funtionPos, 0);
-  //ret
   F_instruction(funtionPos,0x49);
-  
 }
-/* '{' stmt* '}'
-	stmt -> expr_stmt | decl_stmt | if_stmt | while_stmt | return_stmt | block_stmt
-*/
+
+/*==========================*
+- - - - Statements - - - - - 
+*==========================*/
 void block_stmt(int funtionPos, int upRange)
 {
   rangePos = Lmap.size();
@@ -170,9 +157,9 @@ void block_stmt(int funtionPos, int upRange)
     else if (symId == WHILE_KW)
       while_stmt(funtionPos);
     else if (symId == BREAK_KW)
-      error(99,token);
+      error(UNIMPLEMENTED,token);
     else if (symId == CONTINUE_KW)
-      error(99,token);
+      error(UNIMPLEMENTED,token);
     else if (symId == RETURN_KW)
       return_stmt(funtionPos);
     else if (symId == SEMICOLON)
@@ -191,31 +178,28 @@ void block_stmt(int funtionPos, int upRange)
       check(SEMICOLON);
       getsym();
     }
-    else
-    {
-      break;
-    }
+    else break;
     // 恢复域级
     rangePos = savePos;
   }
-  check(R_BRACE); //stmt尾已读
+  check(R_BRACE);
   getsym();
 }
-/* 'const' IDENT ':' ty '=' expr ';' */
+
 void const_decl_stmt(int funtionPos, int rangePos_)
 {
   rangePos = rangePos_;
-  getsym(); // IDENT
+  getsym();
   check(IDENT);
   string preToken = token;
-  getsym(); // :
+  getsym();
   check(COLON);
-  getsym();     // ty
-  check(IDENT); // 'int' 'double' 'void'
+  getsym();
+  check(IDENT);
   int retType = ASSIGN_;
   if (!strcmp(token, "int"))
     retType = INT_;
-  else error(99, token);
+  else error(RETURN_INT, token);
 
   Global tempVar(preToken, token, true);
   int varPos = 0;
@@ -227,38 +211,38 @@ void const_decl_stmt(int funtionPos, int rangePos_)
     varPos = Fmap[funtionPos].localSlotNum++;
   Lmap[rangePos].vars.push_back(tempVar);
 
-  getsym(); // =
+  getsym();
   check(ASSIGN);
 
-  if (funtionPos == 0)
+  if (funtionPos == 0) 
     F_instruction(funtionPos,0x0c);
-  else
+  else 
     F_instruction(funtionPos,0x0a);
   pushIns(varPos, Fmap[funtionPos].instructions);
 
   getsym();
-  expr(funtionPos,&retType); // ;
+  expr(funtionPos,&retType);
   F_instruction(funtionPos,0x17);
   
   check(SEMICOLON);
   getsym();
 }
-/* 'let' IDENT ':' ty ('=' expr)? ';' */
+
 void let_decl_stmt(int funtionPos, int rangePos_)
 {
   rangePos = rangePos_;
-  getsym(); // IDENT
+  getsym();
   check(IDENT);
   string preToken = token;
-  getsym(); // :
+  getsym();
   check(COLON);
-  getsym(); // ty
+  getsym();
   check(IDENT);
   int retType = ASSIGN_;
   if (!strcmp(token, "int"))
     retType = INT_;
   else
-    error(99, token);
+    error(RETURN_INT, token);
   Global tempVar(preToken, token, false);
   int varPos = 0;
 
@@ -270,7 +254,7 @@ void let_decl_stmt(int funtionPos, int rangePos_)
   tempVar.funSlot = varPos;
   Lmap[rangePos].vars.push_back(tempVar);
 
-  getsym(); // = | ;
+  getsym();
   if (symId == ASSIGN)
   {
     if (funtionPos == 0)
@@ -280,19 +264,19 @@ void let_decl_stmt(int funtionPos, int rangePos_)
     pushIns(varPos, Fmap[funtionPos].instructions);
 
     getsym();
-    expr(funtionPos, &retType); // ;
+    expr(funtionPos, &retType);
     F_instruction(funtionPos,0x17);
     
   }
   check(SEMICOLON);
   getsym();
 }
-//if_stmt -> 'if' expr block_stmt ('else' block_stmt|if_stmt)?
+
 void if_stmt(int funtionPos)
 {
   int retType = ASSIGN_;
   getsym();
-  expr(funtionPos, &retType); // {
+  expr(funtionPos, &retType);
   //brtrue(1)
   F_instruction(funtionPos,0x43);
   pushIns(1, Fmap[funtionPos].instructions);
@@ -305,7 +289,6 @@ void if_stmt(int funtionPos)
   block_stmt(funtionPos, rangePos);
   int ifHighNum = Fmap[funtionPos].insNum;
 
-  //预读else
   if (symId == ELSE_KW)
   {
     //br(0)0等待替换;
@@ -317,15 +300,11 @@ void if_stmt(int funtionPos)
 
     getsym();
     if (symId == IF_KW)
-    {
       if_stmt(funtionPos);
-    }
     else if (symId == L_BRACE)
-    {
       block_stmt(funtionPos, rangePos);
-    }
     else
-      error(99, token);
+      error(GRAMMER_ERROR, token);
     //修改else等待替换的br(0)
     unsigned char str[5];
     memset(str, 0, sizeof(str));
@@ -347,7 +326,7 @@ void if_stmt(int funtionPos)
   F_instruction(funtionPos,0x41);
   pushIns(0, Fmap[funtionPos].instructions);
 }
-/* 'while' expr block_stmt */
+
 void while_stmt(int funtionPos)
 {
   int retType = ASSIGN_;
@@ -380,58 +359,36 @@ void while_stmt(int funtionPos)
     Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
   }
 }
-/* 'return' expr? ';' */
+
 void return_stmt(int funtionPos)
 {
   getsym();
   if (symId != SEMICOLON)
   {
-    //arga(0)
-    F_instruction(funtionPos,0x0b);
+    F_instruction(funtionPos,0x0b); //arga(0)
     pushIns(0, Fmap[funtionPos].instructions);
     
-    //返回值
-    int retType;
-    if (Fmap[funtionPos].retType == "int")
-      retType = INT_;
-    else
-      error(99, token);
+    int retType = INT_;
+    if (Fmap[funtionPos].retType != "int")
+      error(RETURN_INT, token);
     expr(funtionPos, &retType);
     F_instruction(funtionPos,0x17); 
   }
   else
   {
     if (Fmap[funtionPos].retType != "void")
-      error(99, token);
+      error(RETURN_VOID, token);
   }
-  //ret
   F_instruction(funtionPos,0x49);
   
   check(SEMICOLON);
   getsym();
 }
 
-//=============================
+/*==========================*
+- - - - Expression - - - - - 
+*==========================*/
 
-/*
-expr -> 
-    operator_expr
-    | negate_expr
-    | assign_expr
-    | as_expr
-    | call_expr
-    | literal_expr
-    | ident_expr
-    | group_expr      
-expr -> high_expr(比较运算符high_expr)*
-high_expr -> medium_expr(加减运算符medium_expr)*
-medium_expr -> low_expr(乘除运算符low_expr)*
-//应先预读到IDENT、'-'、'('、literal 才进入analyseExpr
-*/
-void HighExpr(int funtionPos, int *retType);
-void MediumExpr(int funtionPos, int *retType);
-void LowExpr(int funtionPos, int *retType);
-void CallParamList(int funtionPos, int callFuntionPos);
 void expr(int funtionPos, int *retType)
 {
   HighExpr(funtionPos, retType);
@@ -524,7 +481,7 @@ void HighExpr(int funtionPos, int *retType)
       if (*retType == INT_)
         F_instruction(funtionPos,0x20);
       else
-        error(99, token);
+        error(RETURN_INT, token);
     }
     else if (symId == MINUS)
     {
@@ -533,7 +490,7 @@ void HighExpr(int funtionPos, int *retType)
       if (*retType == INT_)
         F_instruction(funtionPos,0x21);
       else
-        error(99, token);
+        error(RETURN_INT, token);
     }
     else
       break;
@@ -572,56 +529,36 @@ void LowExpr(int funtionPos, int *retType)
     string preToken = token;
     getsym(); // '(' | '=' | AFTER
 
-    // 函数调用 IDENT '(' call_param_list? ')'
+    /*========== Function Call =========*/
     if (symId == L_PAREN)
     {
-      //查找funtion，从main开始
-      int callFuntionPos = 0;
-      for (int i = 1; i < Fmap.size(); i++)
-        if (preToken == Fmap[i].name)
-        {
-          callFuntionPos = i;
-          break;
-        }
-      //没找到
-      if (callFuntionPos == 0)
-        error(99, token);
-      //压入_ret
+      int callFuntionPos = findFun(preToken);
+      if(callFuntionPos<0) error(UNEXITED_FUN,token);
+      
       if (Fmap[callFuntionPos].retType == "void")
       {
-        //找到的函数返回值不是要求的返回值
         if (*retType != ASSIGN_ && *retType != VOID_)
-          error(99, token);
-        //压入
-        //stackalloc(0)
+          error(RETURN_VOID, token);
         F_instruction(funtionPos,0x1a);
         pushIns(0, Fmap[funtionPos].instructions);
         
-        //返回调用者想要查看的返回值类型
-        if (*retType == ASSIGN_)
-          *retType = VOID_;
+        if (*retType == ASSIGN_) *retType = VOID_;
       }
       else if (Fmap[callFuntionPos].retType == "int")
       {
-        //找到的函数返回值不是要求的返回值
         if (*retType != ASSIGN_ && *retType != INT_)
-          error(99, token);
-        //压入
-        //stackalloc(1)
+          error(RETURN_INT, token);
         F_instruction(funtionPos,0x1a);
         pushIns(1, Fmap[funtionPos].instructions);
         
-        //返回调用者想要查看的返回值类型
-        if (*retType == ASSIGN_)
-          *retType = INT_;
+        if (*retType == ASSIGN_) *retType = INT_;
       }
 
-      getsym(); // call_param_list | ')'
+      getsym();
       if (symId == R_PAREN)
-      {           // 空列表
+      { // null_list
         F_instruction(funtionPos,0x48);
         pushIns(callFuntionPos, Fmap[funtionPos].instructions);
-        getsym(); // read next
       }
       else
       {
@@ -629,20 +566,19 @@ void LowExpr(int funtionPos, int *retType)
         F_instruction(funtionPos,0x48);
         pushIns(callFuntionPos, Fmap[funtionPos].instructions);
         check(R_PAREN);
-        getsym(); // read next
       }
+      getsym();
     }
 
-    // 赋值语句 l_expr '=' expr
+    /*========== Assign stmt =========*/
     else if (symId == ASSIGN)
     {
-      //调用者想要的返回值不是void
       if (*retType != ASSIGN_ && *retType != VOID_)
-        error(99, token);
-      //查找变量
+        error(RETURN_VOID, token);
+      
       int varType = ASSIGN_;
       bool local = false, param = false, global = false;
-      //向上域进行查找
+      //local vars
       while (Lmap[tempRangePos].upRange != -1)
       {
         i = findVar(tempRangePos,preToken,&varType,ASSIGN_);
@@ -655,7 +591,7 @@ void LowExpr(int funtionPos, int *retType)
         }
         tempRangePos = Lmap[tempRangePos].upRange;
       }
-      //函数的参数
+      //fun params
       if (!local)
       {
         i = findParam(funtionPos,preToken,&varType,ASSIGN_);
@@ -668,7 +604,7 @@ void LowExpr(int funtionPos, int *retType)
             pushIns(i + 1, Fmap[funtionPos].instructions);
         }
       }
-      //全局变量
+      //global vars
       if (!local && !param)
       {
         i = findVar(0,preToken,&varType,ASSIGN_);
@@ -677,28 +613,25 @@ void LowExpr(int funtionPos, int *retType)
           F_instruction(funtionPos,0x0c);
           pushIns(i, Fmap[funtionPos].instructions);
         }
-        else error(99, token);
+        else error(UNEXITED_VAR, token);
       }
       
-      getsym(); //expr
+      getsym();
       expr(funtionPos, &varType);
-      if (*retType == ASSIGN_)
-        *retType = VOID_;
-      F_instruction(funtionPos,0x17); //store64
+      if (*retType == ASSIGN_) *retType = VOID_;
+      F_instruction(funtionPos,0x17);
       
     }
-    // 变量调用 IDENT 注：此时以读了下一个token
+    /*========== Ident =========*/
     else
     {
-      //查找变量
       bool local = false, param = false, global = false;
-      //向上域进行查找
+
       while (Lmap[tempRangePos].upRange != -1)
-      { //达到0层直接跳出
+      {
         i = findVar(tempRangePos,preToken,retType,LOAD_);
         if(i != -1){
           int slot = Lmap[tempRangePos].vars[i].funSlot;
-          // printf("\nFIND i = %d; Slot = %d",i,slot);
           local = true;
           F_instruction(funtionPos,0x0a);
           pushIns(slot, Fmap[funtionPos].instructions);
@@ -706,7 +639,6 @@ void LowExpr(int funtionPos, int *retType)
         }
         tempRangePos = Lmap[tempRangePos].upRange;
       }
-      //函数的参数
       if (!local)
       {
         i = findParam(funtionPos,preToken,retType,LOAD_);
@@ -719,7 +651,6 @@ void LowExpr(int funtionPos, int *retType)
             pushIns(i + 1, Fmap[funtionPos].instructions);
         }
       }
-      //全局变量
       if (!local && !param)
       {
         i = findVar(0,preToken,retType,LOAD_);
@@ -728,35 +659,31 @@ void LowExpr(int funtionPos, int *retType)
           F_instruction(funtionPos,0x0c);
           pushIns(i, Fmap[funtionPos].instructions);
         }
-        else error(99, token);
+        else error(UNEXITED_VAR, token);
       }
-      //load64
       F_instruction(funtionPos,0x13);
     }
   }
   else if (symId == UINT_LITERAL)
   {
-    //要求该lowexpr的返回类型不是int
     if (*retType != ASSIGN_ && *retType != INT_)
-      error(99, token);
-    //TODO:int64_t的上限？
+      error(RETURN_INT, token);
+    //TODO
     int64_t temp = atoi(token);
     F_instruction(funtionPos,0x01);
     pushIns(temp, Fmap[funtionPos].instructions);
     
-    if (*retType == ASSIGN_)
-      *retType = INT_;
+    if (*retType == ASSIGN_) *retType = INT_;
     getsym();
   }
   else if (symId == DOUBLE_LITERAL)
   {
-    error(99, token);
+    error(UNIMPLEMENTED, token);
   }
   else if (symId == STRING_LITERAL)
   {
-    //要求该lowexpr的返回类型不是int
     if (*retType != ASSIGN_ && *retType != INT_)
-      error(99, token);
+      error(RETURN_INT, token);
     Global temp = Global(token, "string", true);
     int64_t tempNum = Lmap[0].vars.size();
     Lmap[0].vars.push_back(temp);
@@ -769,9 +696,8 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == CHAR_LITERAL)
   {
-    //要求该lowexpr的返回类型不是int
     if (*retType != ASSIGN_ && *retType != INT_)
-      error(99, token);
+      error(RETURN_INT, token);
     int64_t tempNum = token[0];
     F_instruction(funtionPos,0x01);
     pushIns(tempNum, Fmap[funtionPos].instructions);
@@ -781,204 +707,161 @@ void LowExpr(int funtionPos, int *retType)
     getsym();
   }
   else if (symId == MINUS)
-  { // '-' expr
+  {
     if (*retType != ASSIGN_ && *retType != INT_ )
-      error(99, token);
-    getsym(); //expr
+      error(RETURN_INT, token);
+    getsym();
     int retT = ASSIGN_;
     expr(funtionPos, &retT);
     if (retT == INT_)
     {
       F_instruction(funtionPos,0x34);
-      
-      if (*retType == ASSIGN_)
-        *retType = INT_;
+      if (*retType == ASSIGN_) *retType = INT_;
     }
-    else
-    {
-      printf("%d ", retT);
-      error(99, token);
-    }
+    else error(RETURN_INT, token);
   }
   else if (symId == L_PAREN)
-  { // '(' expr ')'
+  {
     getsym();
     if (isExpr())
       expr(funtionPos, retType);
     else
-      error(99, token);
+      error(EXPR_ERROR, token);
     check(R_PAREN);
-    getsym(); // ;
+    getsym();
   }
   else if (symId == GETINT)
   {
     if (*retType != ASSIGN_ && *retType != INT_)
-      error(99,token);
-    //'('
+      error(RETURN_INT,token);
+      
     getsym();
     check(L_PAREN);
-    //')'
+    
     getsym();
     check(R_PAREN);
-    //scan.i
     F_instruction(funtionPos,0x50);
     
-    if (*retType == ASSIGN_)
-      *retType = INT_;
+    if (*retType == ASSIGN_) *retType = INT_;
     getsym();
   }
   else if (symId == GETDOUBLE)
   {
-    error(99,token);
+    error(UNIMPLEMENTED,token);
   }
   else if (symId == GETCHAR)
   {
     if (*retType != ASSIGN_ && *retType != INT_)
-      error(99,token);
-    //'('
+      error(RETURN_INT,token);
+    
     getsym();
     check(L_PAREN);
-    //')'
+    
     getsym();
     check(R_PAREN);
-    //scan.f
     F_instruction(funtionPos,0x51);
     
-    if (*retType == ASSIGN_)
-      *retType = INT_;
+    if (*retType == ASSIGN_) *retType = INT_;
     getsym();
   }
   else if (symId == PUTINT)
   {
     if (*retType != ASSIGN_ && *retType != VOID_)
-      error(99,token);
+      error(RETURN_VOID,token);
     int retT = INT_;
-    //'('
+    
     getsym();
     check(L_PAREN);
-    //int
+    
     getsym();
     expr(funtionPos, &retT);
-    //')'
+    
     check(R_PAREN);
-    //print.i
     F_instruction(funtionPos,0x54);
     
-    if (*retType == ASSIGN_)
-      *retType = VOID_;
+    if (*retType == ASSIGN_) *retType = VOID_;
     getsym();
   }
   else if (symId == PUTDOUBLE)
   {
-    if (*retType != ASSIGN_ && *retType != VOID_)
-      error(99,token);
-    int retT = 2;
-    //'('
-    getsym();
-    check(L_PAREN);
-    //double
-    getsym();
-    expr(funtionPos, &retT);
-    //')'
-    check(R_PAREN);
-    //print.f
-    F_instruction(funtionPos,0x56);
-    
-    if (*retType == ASSIGN_)
-      *retType = VOID_;
-    getsym();
+    error(UNIMPLEMENTED,token);
   }
   else if (symId == PUTCHAR)
   {
     if (*retType != ASSIGN_ && *retType != VOID_)
-      error(99,token);
+      error(RETURN_VOID,token);
     int retT = INT_;
-    //'('
+    
     getsym();
     check(L_PAREN);
-    //int
+    
     getsym();
     expr(funtionPos, &retT);
-    //')'
+    
     check(R_PAREN);
-    //print.c
     F_instruction(funtionPos,0x55);
     
-    if (*retType == ASSIGN_)
-      *retType = VOID_;
+    if (*retType == ASSIGN_) *retType = VOID_;
     getsym();
   }
   else if (symId == PUTSTR)
   {
     if (*retType != ASSIGN_ && *retType != VOID_)
-      error(99,token);
+      error(RETURN_VOID,token);
     int retT = INT_;
-    //'('
     getsym();
     check(L_PAREN);
-    //STRING
+
     getsym();
     if (symId != STRING_LITERAL)
-      error(99,token);
+      error(STR_ERROR,token);
     Global temp = Global(token, "string", true);
     int64_t tempNum = Lmap[0].vars.size();
     Lmap[0].vars.push_back(temp);
     F_instruction(funtionPos,0x01);
     pushIns(tempNum, Fmap[funtionPos].instructions);
     
-    //')'
     getsym();
     check(R_PAREN);
-    //print.s
     F_instruction(funtionPos,0x57);
     
-    if (*retType == ASSIGN_)
-      *retType = VOID_;
+    if (*retType == ASSIGN_) *retType = VOID_;
     getsym();
   }
   else if (symId == PUTLN)
   {
     if (*retType != ASSIGN_ && *retType != VOID_)
-      error(99,token);
-    //'('
+      error(RETURN_VOID,token);
     getsym();
     check(L_PAREN);
-    //')'
     getsym();
     check(R_PAREN);
-    //println
     F_instruction(funtionPos,0x58);
     
-    if (*retType == ASSIGN_)
-      *retType = VOID_;
+    if (*retType == ASSIGN_) *retType = VOID_;
     getsym();
   }
   else
-    error(99, token);
+    error(UNMATCH_IDENT, token);
 
   if(symId == AS_KW){
-    error(99,token);
+    error(UNIMPLEMENTED,token);
   }
 }
 
-// expr (',' expr)* [非空才进入]
 void CallParamList(int funtionPos, int callFuntionPos)
 {
   int retType = ASSIGN_;
   expr(funtionPos, &retType);
   if (retType == INT_)
-  {
     if (Fmap[callFuntionPos].params[0].dataType != "int")
-      error(99, token);
-  }
+      error(RETURN_INT, token);
   else if (retType == VOID_)
-  {
     if (Fmap[callFuntionPos].params[0].dataType != "void")
-      error(99, token);
-  }
+      error(RETURN_VOID, token);
   else
-    error(99, token);
-  // 【调用】函数已定义，可查到其参数个数
+    error(UNMATCH_TYPE, token);
+  
   int size = Fmap[callFuntionPos].params.size();
   for (int i = 1; i < size; ++i)
   {
@@ -987,17 +870,13 @@ void CallParamList(int funtionPos, int callFuntionPos)
     retType = ASSIGN_;
     expr(funtionPos, &retType);
     if (retType == INT_)
-    {
       if (Fmap[callFuntionPos].params[i].dataType != "int")
-        error(99, token);
-    }
+        error(RETURN_INT, token);
     else if (retType == VOID_)
-    {
       if (Fmap[callFuntionPos].params[i].dataType != "void")
-        error(99, token);
-    }
+        error(RETURN_VOID, token);
     else
-      error(99, token);
+      error(UNMATCH_TYPE, token);
   }
 }
 
@@ -1010,6 +889,13 @@ void parse()
   instructions.push_back(0x3e);
   //version
   pushIns(1, instructions);
+  //初始化默认函数
+  Fmap.push_back(Funtion("_start"));
+  Fmap[0].retType = "void";
+  Fmap.push_back(Funtion("main"));
+  //初始化全局变量
+  Lmap.push_back(Local(0, -1)); //todo
+  
   program();
   init_start(); //_start的指令集
   //Array<GlobalDef>：全局变量常量（全设为0），字符串字面量，函数名
@@ -1048,7 +934,7 @@ void parse()
       }
     }
     else{
-      error(99,token);
+      error(UNMATCH_TYPE,token);
     }
   }
   //Array<GlobalDef>.item 函数部分
@@ -1086,11 +972,8 @@ void parse()
       int return_slots = 0;
       pushIns(return_slots, instructions);
     }
-    else
-    {
-      printf("Fmap[%d] error: %s\n",i,Fmap[i].retType.c_str());
-      error(99,token);
-    }
+    else error(UNMATCH_TYPE,token);
+
     //Array<FunctionDef>.item[i].param_slots
     pushIns(Fmap[i].paramSlotNum, instructions);
     //Array<FunctionDef>.item[i].loc_slots

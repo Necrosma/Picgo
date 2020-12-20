@@ -141,6 +141,16 @@ void F_instruction(int funtionPos, int n)
   Fmap[funtionPos].instructions.push_back(n);
   Fmap[funtionPos].insNum++;
 }
+int findFun(string preToken)
+{
+  for (int i = 1; i < Fmap.size(); i++){
+    if (preToken == Fmap[i].name)
+    {
+      return i;
+    }
+  }
+  return -1;
+}
 
 int findVar(int tempRangePos, string preToken, int *retType, int isLoad)
 {
