@@ -50,17 +50,6 @@ void checkVarType(Global type, int* retType);
 void setVarType(Global param, int* retType);
 //==============================
 
-uint64_t doubleToRawBits(double x)
-{
-  uint64_t bits;
-  memcpy(&bits, &x, sizeof bits);
-  return bits;
-}
-void intToTwoBits(int x, unsigned char *str)
-{
-  str[1] = x;
-  str[2] = x >> 8;
-}
 void intToFourBits(int x, unsigned char *str)
 {
   str[1] = x;
@@ -83,11 +72,11 @@ void pushIns(int x, vector<unsigned char> &instructions)
 {
   unsigned char str[5];
   memset(str, 0, sizeof(str));
-  intToFourBits(x, str);
-  instructions.push_back(str[4]);
-  instructions.push_back(str[3]);
-  instructions.push_back(str[2]);
-  instructions.push_back(str[1]);
+  // intToFourBits(x, str);
+  instructions.push_back(x>>24);
+  instructions.push_back(x>>16);
+  instructions.push_back(x>>8);
+  instructions.push_back(x);
 }
 void pushIns(int64_t x, vector<unsigned char> &instructions)
 {
@@ -107,9 +96,8 @@ void pushIns(int16_t x, vector<unsigned char> &instructions)
 {
   unsigned char str[3];
   memset(str, 0, sizeof(str));
-  intToTwoBits(x, str);
-  instructions.push_back(str[2]);
-  instructions.push_back(str[1]);
+  instructions.push_back(x>>8);
+  instructions.push_back(x);
 }
 void init_start()
 {
@@ -145,9 +133,7 @@ int findFun(string preToken)
 {
   for (int i = 1; i < Fmap.size(); i++){
     if (preToken == Fmap[i].name)
-    {
       return i;
-    }
   }
   return -1;
 }

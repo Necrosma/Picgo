@@ -4,6 +4,7 @@
 #include <sstream>
 #include <stdlib.h>
 using namespace std;
+
 #define FILEOPEN_ERROR -1 //file open failed
 #define ZEROSTART_ERROR 0 //
 #define UNDEFFUNC_ERROR 1
@@ -32,7 +33,7 @@ using namespace std;
 #define DUL_FUN 41
 #define DUL_VAR 42
 
-#define UNIMPLEMENTED 99 // develop
+#define UNDO 99 // develop
 
 void error(int errorcode, char* token){
     cout << token << endl;

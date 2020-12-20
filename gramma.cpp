@@ -14,15 +14,12 @@ using namespace std;
 
 void parse();
 void function();
-void let_decl_stmt(int funtionPos,int rangePos_);
-void const_decl_stmt(int funtionPos,int rangePos_);
-void stmt(int funtionPos);
+void block_stmt(int funtionPos, int upRange);
+void let_stmt(int funtionPos,int rangePos_);
+void const_stmt(int funtionPos,int rangePos_);
 void if_stmt(int funtionPos);
 void while_stmt(int funtionPos);
-void break_stmt(int funtionPos);
-void continue_stmt(int funtionPos);
 void return_stmt(int funtionPos);
-void block_stmt(int funtionPos, int upRange);
 void expr(int funtionPos, int *retType);
 void HighExpr(int funtionPos, int *retType);
 void MediumExpr(int funtionPos, int *retType);
@@ -30,8 +27,10 @@ void LowExpr(int funtionPos, int *retType);
 void CallParamList(int funtionPos, int callFuntionPos);
 
 int rangePos;
+
+
 /*===========================================/
-Utils
+- - - - - Utils - - - - - 
 /===========================================*/
 void check(int id)
 {
@@ -43,8 +42,9 @@ void check(int id)
 }
 bool isExpr()
 {
-  if (symId==IDENT || symId==MINUS || symId==L_PAREN || symId == UINT_LITERAL || symId == DOUBLE_LITERAL || symId == STRING_LITERAL || symId == CHAR_LITERAL 
-    || symId==GETINT || symId==GETDOUBLE || symId==GETCHAR || symId==PUTINT || symId==PUTDOUBLE || symId==PUTCHAR || symId==PUTSTR || symId==PUTLN 
+  if (symId==IDENT || symId==MINUS || symId==L_PAREN || symId == UINT_LITERAL || symId == DOUBLE_LITERAL 
+    || symId == STRING_LITERAL || symId == CHAR_LITERAL || symId==GETINT || symId==GETDOUBLE 
+    || symId==GETCHAR || symId==PUTINT || symId==PUTDOUBLE || symId==PUTCHAR || symId==PUTSTR || symId==PUTLN 
   ) return true;
   else
     return false;
@@ -52,7 +52,7 @@ bool isExpr()
 
 
 /*===========================================/
-Functions
+- - - - - Functions - - - - - 
 /===========================================*/
 void program()
 {
@@ -61,11 +61,10 @@ void program()
     if (symId == FN_KW)
       function();
     else if (symId == LET_KW)
-      let_decl_stmt(0, 0);
+      let_stmt(0, 0);
     else if (symId == CONST_KW)
-      const_decl_stmt(0, 0);
-    else
-      break;
+      const_stmt(0, 0);
+    else break;
   }
 }
 
@@ -100,21 +99,21 @@ void function()
       if (symId == CONST_KW)
       {
         tempParam.is_const = true;
-        getsym(); // IDENT
+        getsym();
       }
       check(IDENT);
       tempParam.name = token;
 
-      getsym(); // :
+      getsym();
       check(COLON);
-      getsym(); // ty
+      getsym();
       check(IDENT);
       if (!strcmp(token, "int") || !strcmp(token, "void"))
         tempParam.dataType = token;
       else
         error(UNMATCH_TYPE, token);
       tempParams.push_back(tempParam);
-      getsym(); // ',' | ')'
+      getsym();
     } while (symId == COMMA);
 
     Fmap[funtionPos].params = tempParams;
@@ -135,9 +134,10 @@ void function()
   F_instruction(funtionPos,0x49);
 }
 
-/*==========================*
-- - - - Statements - - - - - 
-*==========================*/
+
+/*==========================================*
+- - - - - Statements - - - - - 
+*==========================================*/
 void block_stmt(int funtionPos, int upRange)
 {
   rangePos = Lmap.size();
@@ -149,17 +149,17 @@ void block_stmt(int funtionPos, int upRange)
   while (true)
   {
     if (symId == CONST_KW)
-      const_decl_stmt(funtionPos,rangePos);
+      const_stmt(funtionPos,rangePos);
     else if (symId == LET_KW)
-      let_decl_stmt(funtionPos,rangePos);
+      let_stmt(funtionPos,rangePos);
     else if (symId == IF_KW)
       if_stmt(funtionPos);
     else if (symId == WHILE_KW)
       while_stmt(funtionPos);
     else if (symId == BREAK_KW)
-      error(UNIMPLEMENTED,token);
+      error(UNDO,token);
     else if (symId == CONTINUE_KW)
-      error(UNIMPLEMENTED,token);
+      error(UNDO,token);
     else if (symId == RETURN_KW)
       return_stmt(funtionPos);
     else if (symId == SEMICOLON)
@@ -179,14 +179,13 @@ void block_stmt(int funtionPos, int upRange)
       getsym();
     }
     else break;
-    // 恢复域级
     rangePos = savePos;
   }
   check(R_BRACE);
   getsym();
 }
 
-void const_decl_stmt(int funtionPos, int rangePos_)
+void const_stmt(int funtionPos, int rangePos_)
 {
   rangePos = rangePos_;
   getsym();
@@ -228,7 +227,7 @@ void const_decl_stmt(int funtionPos, int rangePos_)
   getsym();
 }
 
-void let_decl_stmt(int funtionPos, int rangePos_)
+void let_stmt(int funtionPos, int rangePos_)
 {
   rangePos = rangePos_;
   getsym();
@@ -385,9 +384,10 @@ void return_stmt(int funtionPos)
   getsym();
 }
 
-/*==========================*
-- - - - Expression - - - - - 
-*==========================*/
+
+/*=========================================*
+- - - - - Expression - - - - - 
+*==========================================*/
 
 void expr(int funtionPos, int *retType)
 {
@@ -527,7 +527,7 @@ void LowExpr(int funtionPos, int *retType)
   if (symId == IDENT)
   {
     string preToken = token;
-    getsym(); // '(' | '=' | AFTER
+    getsym();
 
     /*========== Function Call =========*/
     if (symId == L_PAREN)
@@ -678,7 +678,7 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == DOUBLE_LITERAL)
   {
-    error(UNIMPLEMENTED, token);
+    error(UNDO, token);
   }
   else if (symId == STRING_LITERAL)
   {
@@ -747,7 +747,7 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == GETDOUBLE)
   {
-    error(UNIMPLEMENTED,token);
+    error(UNDO,token);
   }
   else if (symId == GETCHAR)
   {
@@ -784,7 +784,7 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == PUTDOUBLE)
   {
-    error(UNIMPLEMENTED,token);
+    error(UNDO,token);
   }
   else if (symId == PUTCHAR)
   {
@@ -845,7 +845,7 @@ void LowExpr(int funtionPos, int *retType)
     error(UNMATCH_IDENT, token);
 
   if(symId == AS_KW){
-    error(UNIMPLEMENTED,token);
+    error(UNDO,token);
   }
 }
 
