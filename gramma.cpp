@@ -305,32 +305,37 @@ void if_stmt(int funtionPos)
     else
       error(GRAMMER_ERROR, token);
     //修改else等待替换的br(0)
-    unsigned char str[5];
-    memset(str, 0, sizeof(str));
-    int x = ifHighNum - ifLowNum;
-    str[1]=x;
-    str[2]=x>>8;
-    str[3]=x>>16;
-    str[4]=x>>24;
-    // intToFourBits(Fmap[funtionPos].insNum - elseLowNum, str);
-    for (int i = 0; i < 4; i++)
-    {
-      Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
-    }
+    // unsigned char str[5];
+    // memset(str, 0, sizeof(str));
+    int x = Fmap[funtionPos].insNum - elseLowNum;
+    // str[1]=x;
+    // str[2]=x>>8;
+    // str[3]=x>>16;
+    // str[4]=x>>24;
+    // for (int i = 0; i < 4; i++)
+    // {
+    Fmap[funtionPos].instructions[waitPos] = x>>24;
+    Fmap[funtionPos].instructions[waitPos+1] = x>>16;
+    Fmap[funtionPos].instructions[waitPos+2] = x>>8;
+    Fmap[funtionPos].instructions[waitPos+3] = x;
+    // }
   }
   //修改if等待替换的br(0)
-  unsigned char str[5];
-  memset(str, 0, sizeof(str));
+  // unsigned char str[5];
+  // memset(str, 0, sizeof(str));
   int x = ifHighNum - ifLowNum;
-  str[1]=x;
-  str[2]=x>>8;
-  str[3]=x>>16;
-  str[4]=x>>24;
-  // intToFourBits(ifHighNum - ifLowNum, str);
-  for (int i = 0; i < 4; i++)
-  {
-    Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
-  }
+  // str[1]=x;
+  // str[2]=x>>8;
+  // str[3]=x>>16;
+  // str[4]=x>>24;
+  // for (int i = 0; i < 4; i++)
+  // {
+    // Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
+  Fmap[funtionPos].instructions[waitPos] = x>>24;
+  Fmap[funtionPos].instructions[waitPos+1] = x>>16;
+  Fmap[funtionPos].instructions[waitPos+2] = x>>8;
+  Fmap[funtionPos].instructions[waitPos+3] = x;
+  // }
   //结尾添加一个br(0)
   Fun_instruction(funtionPos,0x41);
   u32_instruction(0, Fmap[funtionPos].instructions);
@@ -360,18 +365,21 @@ void while_stmt(int funtionPos)
   Fun_instruction(funtionPos,0x41);
   u32_instruction(whileNum - Fmap[funtionPos].insNum, Fmap[funtionPos].instructions);
   //修改开头等待替换的0
-  unsigned char str[5];
-  memset(str, 0, sizeof(str));
+  // unsigned char str[5];
+  // memset(str, 0, sizeof(str));
   int x = Fmap[funtionPos].insNum - tempNum;
-  str[1]=x;
-  str[2]=x>>8;
-  str[3]=x>>16;
-  str[4]=x>>24;
-  // intToFourBits(Fmap[funtionPos].insNum - tempNum, str); //TODO:check
-  for (int i = 0; i < 4; i++)
-  {
-    Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
-  }
+  // str[1]=x;
+  // str[2]=x>>8;
+  // str[3]=x>>16;
+  // str[4]=x>>24;
+  // for (int i = 0; i < 4; i++)
+  // {
+    // Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
+  Fmap[funtionPos].instructions[waitPos] = x>>24;
+  Fmap[funtionPos].instructions[waitPos+1] = x>>16;
+  Fmap[funtionPos].instructions[waitPos+2] = x>>8;
+  Fmap[funtionPos].instructions[waitPos+3] = x;
+  // }
 }
 
 void return_stmt(int funtionPos)

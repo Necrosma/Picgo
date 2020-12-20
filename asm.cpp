@@ -49,6 +49,12 @@ vector<unsigned char> instructions;
 void checkVarType(Global type, int* retType);
 void setVarType(Global param, int* retType);
 //==============================
+void intToFourBits(int x,unsigned char *str){
+    str[1]=x;
+    str[2]=x>>8;
+    str[3]=x>>16;
+    str[4]=x>>24;
+}
 
 void u32_instruction(int x, vector<unsigned char> &instructions)
 {
