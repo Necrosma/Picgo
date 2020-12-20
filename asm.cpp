@@ -20,9 +20,15 @@ typedef struct LOCAL
   vector<Global> vars;
   //所属函数
   int funtionPos;
-  //父域，-1表示父域为全局变量，其余为Lmap下表
+  //全局变量-1 函数0 逐增
   int upRange;
+
+  /*
+    存放待填写的breaks，first是Fmap[funtionPos].instructions[insPos]，代码待填写的位置
+    second是当前指令数，用于被insNum减，得到放入first位置的值
+    */
   LOCAL(int funtionPos, int upRange) : vars(), funtionPos(funtionPos), upRange(upRange) {}
+  LOCAL(int funtionPos, int upRange, int isWhile) : vars(), funtionPos(funtionPos), upRange(upRange) {}
 } Local;
 vector<Local> Lmap;
 typedef struct FUNTION
@@ -144,7 +150,8 @@ int findVar(int tempRangePos, string preToken, int *retType, bool isLoad)
   {
     if (preToken == Lmap[tempRangePos].vars[i].name)
     {
-      if(isLoad) checkVarType(Lmap[tempRangePos].vars[i],retType);
+      if(isLoad)
+        checkVarType(Lmap[tempRangePos].vars[i],retType);
       else setVarType(Lmap[tempRangePos].vars[i],retType);
       return i;
     }
@@ -158,7 +165,7 @@ int findParam(int funtionPos, string preToken, int *retType, bool isLoad)
   {
     if (preToken == Fmap[funtionPos].params[i].name)
     {
-      if(isLoad)checkVarType(Fmap[funtionPos].params[i],retType);
+      if(isLoad) checkVarType(Fmap[funtionPos].params[i],retType);
       else setVarType(Fmap[funtionPos].params[i],retType);
       return i;
     }
@@ -181,29 +188,37 @@ void checkVarType(Global var, int* retType)
 {
   if (var.dataType == "int")
   {
-    if (*retType != 0 && *retType != 1)
+    if (*retType != 0 && *retType != 1){
+      puts("return isn't int");
       error(99, token);
+    }
     if (*retType == 0)
       *retType = 1;
   }
   else if (var.dataType == "double")
   {
-    if (*retType != 0 && *retType != 2)
+    if (*retType != 0 && *retType != 2){
+      puts("return isn't int");
       error(99, token);
+    }
     if (*retType == 0)
       *retType = 2;
   }
   else if (var.dataType == "void")
   {
-    if (*retType != 0 && *retType != 3)
+    if (*retType != 0 && *retType != 3){
+      puts("return isn't int");
       error(99, token);
+    }
     if (*retType == 0)
       *retType = 3;
   }
   else if (var.dataType == "string")
-    ;
-  else
+    puts("string type???");
+  else{
+    puts("checkType unreached ERROR");
     error(99, token);
+  }
 }
 
 void checkDefine(int rangePos, string name){

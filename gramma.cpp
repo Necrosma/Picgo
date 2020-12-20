@@ -59,7 +59,7 @@ void program()
   Fmap[0].retType = "void";
   //默认Fmap[1]是main
   Fmap.push_back(Funtion("main"));
-  Lmap.push_back(Local(0, -1)); //todo
+  Lmap.push_back(Local(0, -1, 0)); //todo
   while (true)
   {
     if (symId == FN_KW)
@@ -158,7 +158,6 @@ void block_stmt(int funtionPos, int upRange)
   rangePos = Lmap.size();
   int savePos = rangePos;
   Lmap.push_back(Local(funtionPos, upRange));
-
   check(L_BRACE);
 
   getsym();
@@ -376,7 +375,6 @@ void while_stmt(int funtionPos)
   int waitPos = Fmap[funtionPos].instructions.size();
   pushIns(0, Fmap[funtionPos].instructions);
   int tempNum = Fmap[funtionPos].insNum;
-  // Lmap[rangePos].continueNum = tempNum;
 
   block_stmt(funtionPos, rangePos);
   //添加循环br(-?)
@@ -390,17 +388,6 @@ void while_stmt(int funtionPos)
   {
     Fmap[funtionPos].instructions[waitPos + i] = str[4 - i];
   }
-  //修改break等待替换的0
-  // for (int i = 0; i < Lmap[rangePos].breaks.size(); i++)
-  // {
-  //   unsigned char str[5];
-  //   memset(str, 0, sizeof(str));
-  //   intToFourBits(Fmap[funtionPos].insNum - Lmap[rangePos].breaks[i].second, str);
-  //   for (int i = 0; i < 4; i++)
-  //   {
-  //     Fmap[funtionPos].instructions[Lmap[rangePos].breaks[i].first + i] = str[4 - i];
-  //   }
-  // }
 }
 /* 'return' expr? ';' */
 void return_stmt(int funtionPos)
@@ -600,6 +587,7 @@ void MediumExpr(int funtionPos, int *retType)
 
 void LowExpr(int funtionPos, int *retType)
 {
+  int tempRangePos = rangePos ,i = -1, flag = 0;
   if (symId == IDENT)
   {
     string preToken = token;
@@ -683,17 +671,17 @@ void LowExpr(int funtionPos, int *retType)
     // 赋值语句 l_expr '=' expr
     else if (symId == ASSIGN)
     {
+      flag = 1;
       //调用者想要的返回值不是void
       if (*retType != 0 && *retType != 3)
         error(99, token);
       //查找变量
-      int tempRangePos = rangePos;
       int varType = 0;
       bool local = false, param = false, global = false;
       //向上域进行查找
       while (Lmap[tempRangePos].upRange != -1)
       {
-        int i = findVar(tempRangePos,preToken,&varType,ASSIGN_);
+        i = findVar(tempRangePos,preToken,&varType,ASSIGN_);
         if(i!=-1){
           int slot = Lmap[tempRangePos].vars[i].funSlot;
           local = true;
@@ -706,7 +694,7 @@ void LowExpr(int funtionPos, int *retType)
       //函数的参数
       if (!local)
       {
-        int i = findParam(funtionPos,preToken,&varType,ASSIGN_);
+        i = findParam(funtionPos,preToken,&varType,ASSIGN_);
         if(i!=-1){
           param = true;
           F_instruction(funtionPos,0x0b);
@@ -719,7 +707,7 @@ void LowExpr(int funtionPos, int *retType)
       //全局变量
       if (!local && !param)
       {
-        int i = findVar(0,preToken,&varType,ASSIGN_);
+        i = findVar(0,preToken,&varType,ASSIGN_);
         if(i!=-1){
           global = true;
           F_instruction(funtionPos,0x0c);
@@ -738,16 +726,16 @@ void LowExpr(int funtionPos, int *retType)
     // 变量调用 IDENT 注：此时以读了下一个token
     else
     {
+      flag = 1;
       //查找变量
-      int tempRangePos = rangePos;
       bool local = false, param = false, global = false;
       //向上域进行查找
       while (Lmap[tempRangePos].upRange != -1)
       { //达到0层直接跳出
-        int i = findVar(tempRangePos,preToken,retType,LOAD);
+        i = findVar(tempRangePos,preToken,retType,LOAD);
         if(i != -1){
           int slot = Lmap[tempRangePos].vars[i].funSlot;
-          printf("\nFIND i = %d; Slot = %d",i,slot);
+          // printf("\nFIND i = %d; Slot = %d",i,slot);
           local = true;
           F_instruction(funtionPos,0x0a);
           pushIns(slot, Fmap[funtionPos].instructions);
@@ -758,7 +746,7 @@ void LowExpr(int funtionPos, int *retType)
       //函数的参数
       if (!local)
       {
-        int i = findParam(funtionPos,preToken,retType,LOAD);
+        i = findParam(funtionPos,preToken,retType,LOAD);
         if(i!=-1){
           param = true;
           F_instruction(funtionPos,0x0b);
@@ -771,7 +759,7 @@ void LowExpr(int funtionPos, int *retType)
       //全局变量
       if (!local && !param)
       {
-        int i = findVar(0,preToken,retType,LOAD);
+        i = findVar(0,preToken,retType,LOAD);
         if(i!=-1){
           global = true;
           F_instruction(funtionPos,0x0c);
@@ -1037,9 +1025,35 @@ void LowExpr(int funtionPos, int *retType)
 
   // as 的部分不管了 TODO
   if(symId == AS_KW){
-    // puts("as is not implement");
     error(99,token);
+    // puts("AS IN");
+    // getsym();
+    // check(IDENT);
+
+    // string str;
+    // if (!strcmp(token, "int")){
+    //   if(*retType==2)
+    //     F_instruction(funtionPos,0x37);
+    //   else if((*retType)!=1){
+    //     puts("非 num 转 int ");
+    //     error(99,token);
+    //   }
+    // }
+    // else if (!strcmp(token, "double")){
+    //   if(*retType==1)
+    //     F_instruction(funtionPos,0x36);
+    //   else if((*retType)!=2){
+    //     puts("非 num 转 double ");
+    //     error(99,token);
+    //   }
+    // }
+    // else error(99,token);
+    // getsym();
   } 
+  // else{ 
+  //   if(flag)
+  //     checkVarType(Lmap[tempRangePos].vars[i],retType);
+  // }
 }
 
 // expr (',' expr)* [非空才进入]
