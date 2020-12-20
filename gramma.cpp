@@ -59,7 +59,7 @@ void program()
   Fmap[0].retType = "void";
   //默认Fmap[1]是main
   Fmap.push_back(Funtion("main"));
-  Lmap.push_back(Local(0, -1, 0)); //todo
+  Lmap.push_back(Local(0, -1)); //todo
   while (true)
   {
     if (symId == FN_KW)
@@ -137,7 +137,7 @@ void function()
 
   getsym(); // ty
   check(IDENT);
-  if (!strcmp(token, "int") || !strcmp(token, "double") || !strcmp(token, "void")){
+  if (!strcmp(token, "int") || !strcmp(token, "void")){
     Fmap[funtionPos].retType = token;
   }
   else
@@ -146,7 +146,7 @@ void function()
   getsym();
   //函数父域为全局变量，0
   block_stmt(funtionPos, 0);
-  //默认ret
+  //ret
   F_instruction(funtionPos,0x49);
   
 }
@@ -187,10 +187,8 @@ void block_stmt(int funtionPos, int upRange)
       expr(funtionPos, &retType);
       if (retType != 3)
       {
-        //popn
         F_instruction(funtionPos,0x03);
         pushIns(1, Fmap[funtionPos].instructions);
-        
       }
       check(SEMICOLON);
       getsym();
@@ -219,13 +217,11 @@ void const_decl_stmt(int funtionPos, int rangePos_)
   int retType = 0;
   if (!strcmp(token, "int"))
     retType = 1;
-  else if (!strcmp(token, "double"))
-    retType = 2;
   else error(99, token);
 
   Global tempVar(preToken, token, true);
   int varPos = 0;
-  //查重后放入符号表
+  
   checkDefine(rangePos,tempVar.name);
   if(funtionPos == 0)
     varPos = Lmap[0].vars.size();
@@ -236,15 +232,15 @@ void const_decl_stmt(int funtionPos, int rangePos_)
   getsym(); // =
   check(ASSIGN);
 
-  if (funtionPos == 0) //global
+  if (funtionPos == 0)
     F_instruction(funtionPos,0x0c);
-  else //loca
+  else
     F_instruction(funtionPos,0x0a);
   pushIns(varPos, Fmap[funtionPos].instructions);
 
   getsym();
   expr(funtionPos,&retType); // ;
-  F_instruction(funtionPos,0x17); //store64
+  F_instruction(funtionPos,0x17);
   
   check(SEMICOLON);
   getsym();
@@ -263,14 +259,11 @@ void let_decl_stmt(int funtionPos, int rangePos_)
   int retType = 0;
   if (!strcmp(token, "int"))
     retType = 1;
-  else if (!strcmp(token, "double"))
-    retType = 2;
   else
     error(99, token);
   Global tempVar(preToken, token, false);
   int varPos = 0;
 
-  //查重后放入符号表
   checkDefine(rangePos,tempVar.name);
   if(funtionPos == 0)
     varPos = Lmap[0].vars.size();
@@ -290,7 +283,7 @@ void let_decl_stmt(int funtionPos, int rangePos_)
 
     getsym();
     expr(funtionPos, &retType); // ;
-    F_instruction(funtionPos,0x17); //store64
+    F_instruction(funtionPos,0x17);
     
   }
   check(SEMICOLON);
@@ -367,7 +360,7 @@ void while_stmt(int funtionPos)
   int whileNum = Fmap[funtionPos].insNum;
   getsym();
   expr(funtionPos, &retType); // {
-                                        //brtrue(1)
+   //brtrue(1)
   F_instruction(funtionPos,0x43);
   pushIns(1, Fmap[funtionPos].instructions);
   //br(0)0等待替换，在符号表中添加continueNum;
@@ -403,14 +396,10 @@ void return_stmt(int funtionPos)
     int retType;
     if (Fmap[funtionPos].retType == "int")
       retType = 1;
-    else if (Fmap[funtionPos].retType == "double")
-      retType = 2;
     else
       error(99, token);
     expr(funtionPos, &retType);
-    //store64
-    F_instruction(funtionPos,0x17);
-    
+    F_instruction(funtionPos,0x17); 
   }
   else
   {
@@ -420,7 +409,7 @@ void return_stmt(int funtionPos)
   //ret
   F_instruction(funtionPos,0x49);
   
-  check(SEMICOLON); //TODO
+  check(SEMICOLON);
   getsym();
 }
 
@@ -536,8 +525,6 @@ void HighExpr(int funtionPos, int *retType)
       MediumExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x20);
-      else if (*retType == 2)
-        F_instruction(funtionPos,0x24);
       else
         error(99, token);
     }
@@ -547,8 +534,6 @@ void HighExpr(int funtionPos, int *retType)
       MediumExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x21);
-      else if (*retType == 2)
-        F_instruction(funtionPos,0x25);
       else
         error(99, token);
     }
@@ -568,8 +553,6 @@ void MediumExpr(int funtionPos, int *retType)
       LowExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x22);
-      else if (*retType == 2)
-        F_instruction(funtionPos,0x26);
     }
     else if (symId == DIV)
     {
@@ -577,8 +560,6 @@ void MediumExpr(int funtionPos, int *retType)
       LowExpr(funtionPos, retType);
       if (*retType == 1)
         F_instruction(funtionPos,0x23);
-      else if (*retType == 2)
-        F_instruction(funtionPos,0x27);
     }
     else
       break;
@@ -587,7 +568,7 @@ void MediumExpr(int funtionPos, int *retType)
 
 void LowExpr(int funtionPos, int *retType)
 {
-  int tempRangePos = rangePos ,i = -1, flag = 0;
+  int tempRangePos = rangePos ,i = -1;
   if (symId == IDENT)
   {
     string preToken = token;
@@ -636,20 +617,6 @@ void LowExpr(int funtionPos, int *retType)
         if (*retType == 0)
           *retType = 1;
       }
-      else if (Fmap[callFuntionPos].retType == "double")
-      {
-        //找到的函数返回值不是要求的返回值
-        if (*retType != 0 && *retType != 2)
-          error(99, token);
-        //压入
-        //stackalloc(1)
-        F_instruction(funtionPos,0x1a);
-        pushIns(1, Fmap[funtionPos].instructions);
-        
-        //返回调用者想要查看的返回值类型
-        if (*retType == 0)
-          *retType = 2;
-      }
 
       getsym(); // call_param_list | ')'
       if (symId == R_PAREN)
@@ -671,7 +638,6 @@ void LowExpr(int funtionPos, int *retType)
     // 赋值语句 l_expr '=' expr
     else if (symId == ASSIGN)
     {
-      flag = 1;
       //调用者想要的返回值不是void
       if (*retType != 0 && *retType != 3)
         error(99, token);
@@ -726,7 +692,6 @@ void LowExpr(int funtionPos, int *retType)
     // 变量调用 IDENT 注：此时以读了下一个token
     else
     {
-      flag = 1;
       //查找变量
       bool local = false, param = false, global = false;
       //向上域进行查找
@@ -787,15 +752,7 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == DOUBLE_LITERAL)
   {
-    // if (*retType != 0 && *retType != 2)
-      error(99, token);
-    int64_t temp = doubleToRawBits(num);
-    F_instruction(funtionPos,0x01);
-    pushIns(temp, Fmap[funtionPos].instructions);
-    
-    if (*retType == 0)
-      *retType = 2;
-    getsym();
+    error(99, token);
   }
   else if (symId == STRING_LITERAL)
   {
@@ -827,7 +784,7 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == MINUS)
   { // '-' expr
-    if (*retType != 0 && *retType != 1 && *retType != 2)
+    if (*retType != 0 && *retType != 1 )
       error(99, token);
     getsym(); //expr
     int retT = 0;
@@ -838,13 +795,6 @@ void LowExpr(int funtionPos, int *retType)
       
       if (*retType == 0)
         *retType = 1;
-    }
-    else if (retT == 2)
-    {
-      F_instruction(funtionPos,0x35);
-      
-      if (*retType == 0)
-        *retType = 2;
     }
     else
     {
@@ -881,20 +831,7 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == GETDOUBLE)
   {
-    // if (*retType != 0 && *retType != 2)
-      error(99,token);
-    //'('
-    getsym();
-    check(L_PAREN);
-    //')'
-    getsym();
-    check(R_PAREN);
-    //scan.f
-    F_instruction(funtionPos,0x52);
-    
-    if (*retType == 0)
-      *retType = 2;
-    getsym();
+    error(99,token);
   }
   else if (symId == GETCHAR)
   {
@@ -1021,7 +958,6 @@ void LowExpr(int funtionPos, int *retType)
   else
     error(99, token);
 
-  // as 的部分不管了 
   if(symId == AS_KW){
     error(99,token);
   }
@@ -1035,11 +971,6 @@ void CallParamList(int funtionPos, int callFuntionPos)
   if (retType == 1)
   {
     if (Fmap[callFuntionPos].params[0].dataType != "int")
-      error(99, token);
-  }
-  else if (retType == 2)
-  {
-    if (Fmap[callFuntionPos].params[0].dataType != "double")
       error(99, token);
   }
   else if (retType == 3)
@@ -1060,11 +991,6 @@ void CallParamList(int funtionPos, int callFuntionPos)
     if (retType == 1)
     {
       if (Fmap[callFuntionPos].params[i].dataType != "int")
-        error(99, token);
-    }
-    else if (retType == 2)
-    {
-      if (Fmap[callFuntionPos].params[i].dataType != "double")
         error(99, token);
     }
     else if (retType == 3)
@@ -1152,7 +1078,7 @@ void parse()
     int name = Fmap[i].pos;
     pushIns(name, instructions);
     //Array<FunctionDef>.item[i].return_slots
-    if (Fmap[i].retType == "int" || Fmap[i].retType == "double")
+    if (Fmap[i].retType == "int")
     {
       int return_slots = 1;
       pushIns(return_slots, instructions);

@@ -23,7 +23,6 @@ typedef struct LOCAL
   //全局变量-1 函数0 逐增
   int upRange;
   LOCAL(int funtionPos, int upRange) : vars(), funtionPos(funtionPos), upRange(upRange) {}
-  LOCAL(int funtionPos, int upRange, int isWhile) : vars(), funtionPos(funtionPos), upRange(upRange) {}
 } Local;
 vector<Local> Lmap;
 typedef struct FUNTION
@@ -173,8 +172,6 @@ void setVarType(Global param, int* retType){
     error(99, token);
   if (param.dataType == "int")
     *retType = 1;
-  else if (param.dataType == "double")
-    *retType = 2;
   else{
     puts("setVarType ERROR");
     error(99, token);
@@ -191,15 +188,6 @@ void checkVarType(Global var, int* retType)
     }
     if (*retType == 0)
       *retType = 1;
-  }
-  else if (var.dataType == "double")
-  {
-    if (*retType != 0 && *retType != 2){
-      puts("return isn't int");
-      error(99, token);
-    }
-    if (*retType == 0)
-      *retType = 2;
   }
   else if (var.dataType == "void")
   {
