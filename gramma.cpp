@@ -787,7 +787,7 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == DOUBLE_LITERAL)
   {
-    if (*retType != 0 && *retType != 2)
+    // if (*retType != 0 && *retType != 2)
       error(99, token);
     int64_t temp = doubleToRawBits(num);
     F_instruction(funtionPos,0x01);
@@ -881,7 +881,7 @@ void LowExpr(int funtionPos, int *retType)
   }
   else if (symId == GETDOUBLE)
   {
-    if (*retType != 0 && *retType != 2)
+    // if (*retType != 0 && *retType != 2)
       error(99,token);
     //'('
     getsym();
@@ -1021,7 +1021,7 @@ void LowExpr(int funtionPos, int *retType)
   else
     error(99, token);
 
-  // as 的部分不管了 TODO
+  // as 的部分不管了 
   if(symId == AS_KW){
     error(99,token);
   }
@@ -1192,12 +1192,6 @@ void parse()
     if(!(n%2) && n%16) cout<<' ';
     if(!(n%16)) cout<<'\n';
   }
-  // puts("\n================");
-  // for(int i=0;i<Lmap.size();++i){
-  //   for(int j=0;j<Lmap[i].vars.size();++j)
-  //     printf("[%d-%d] %s",i,j,Lmap[i].vars[j].name.c_str());
-  //   puts("");
-  // }
 
   fwrite(str.c_str(), str.size(), 1, outFile);
 }
