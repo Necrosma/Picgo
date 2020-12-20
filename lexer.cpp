@@ -63,6 +63,8 @@ double num;
 
 int ip;
 int symId;
+int rangePos;
+int funcPos;
 char ch = ' ';
 string sym = "";
 ifstream src;

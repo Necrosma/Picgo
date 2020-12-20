@@ -18,6 +18,7 @@ typedef struct VAR
   VAR() : name(), dataType(), is_const() {}
   VAR(string name, string dataType, bool is_const) : name(name), dataType(dataType), is_const(is_const) {}
 } Var;
+
 typedef struct RANGE
 {
   vector<Var> vars;
@@ -25,58 +26,32 @@ typedef struct RANGE
   int upRange; //全局变量-1 函数0 逐增
   RANGE(int funtionPos, int upRange) : vars(), funtionPos(funtionPos), upRange(upRange) {}
 } Range;
-vector<Range> rangeList;
+
 typedef struct FUNTION
 {
+  vector<Var> params;
   int pos;
-  int localSlotNum;
-  int paramSlotNum;
   string name;
   string retType;
-  int insNum;
-  vector<unsigned char> instructions;
-  vector<Var> params;
-  FUNTION(string name) : pos(0), localSlotNum(0), paramSlotNum(0), name(name), retType(""), insNum(0), instructions(), params() {}
+  int insNum;  
+  int varSlot;
+  int paramSlot;
+  vector<unsigned char> instruct;
+  FUNTION(string name) : pos(0), varSlot(0), paramSlot(0), name(name), retType(""), insNum(0), instruct(), params() {}
 } Funtion;
+
+
+vector<Range> rangeList;
 vector<Funtion> funcList;
+vector<unsigned char> o0;
 
-vector<unsigned char> instructions;
-
-//=========================================
-void checkVarType(Var type, int* retType);
-void setVarType(Var param, int* retType);
-//==========================================
-
-void Fun_instruction(int funtionPos, int n)
-{
-  funcList[funtionPos].instructions.push_back(n);
-  funcList[funtionPos].insNum++;
-}
-void u32_instruction(int x, vector<unsigned char> &instructions)
-{
-  instructions.push_back(x>>24);
-  instructions.push_back(x>>16);
-  instructions.push_back(x>>8);
-  instructions.push_back(x);
-}
-void u64_instruction(int64_t x, vector<unsigned char> &instructions)
-{
-  instructions.push_back(x>>56);
-  instructions.push_back(x>>48);
-  instructions.push_back(x>>40);
-  instructions.push_back(x>>32);
-  instructions.push_back(x>>24);
-  instructions.push_back(x>>16);
-  instructions.push_back(x>>8);
-  instructions.push_back(x);
-}
 void init_begin()
 {
-  instructions.push_back(0x72);
-  instructions.push_back(0x30);
-  instructions.push_back(0x3b);
-  instructions.push_back(0x3e);
-  u32_instruction(1, instructions);
+  o0.push_back(0x72);
+  o0.push_back(0x30);
+  o0.push_back(0x3b);
+  o0.push_back(0x3e);
+  u32_instruction(1, o0);
   funcList.push_back(Funtion("_start"));
   funcList[0].retType = "void";
   funcList.push_back(Funtion("main"));
@@ -85,26 +60,50 @@ void init_begin()
 void init_end()
 {
   
-  funcList[0].instructions.push_back(0x1a);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x01);
+  funcList[0].instruct.push_back(0x1a);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x01);
   funcList[0].insNum++;
   
-  funcList[0].instructions.push_back(0x48);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x01);
+  funcList[0].instruct.push_back(0x48);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x01);
   funcList[0].insNum++;
   
-  funcList[0].instructions.push_back(0x03);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x00);
-  funcList[0].instructions.push_back(0x01);
+  funcList[0].instruct.push_back(0x03);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x00);
+  funcList[0].instruct.push_back(0x01);
   funcList[0].insNum++;
+}
+
+void Fun_instruction(int funtionPos, int n)
+{
+  funcList[funtionPos].instruct.push_back(n);
+  funcList[funtionPos].insNum++;
+}
+void u32_instruction(int x, vector<unsigned char> &instruct)
+{
+  instruct.push_back(x>>24);
+  instruct.push_back(x>>16);
+  instruct.push_back(x>>8);
+  instruct.push_back(x);
+}
+void u64_instruction(int64_t x, vector<unsigned char> &instruct)
+{
+  instruct.push_back(x>>56);
+  instruct.push_back(x>>48);
+  instruct.push_back(x>>40);
+  instruct.push_back(x>>32);
+  instruct.push_back(x>>24);
+  instruct.push_back(x>>16);
+  instruct.push_back(x>>8);
+  instruct.push_back(x);
 }
 
 void setVarType(Var param, int* retType){

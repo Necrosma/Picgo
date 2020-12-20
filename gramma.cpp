@@ -24,10 +24,7 @@ void expr(int *retType);
 void HighExpr(int *retType);
 void MediumExpr(int *retType);
 void LowExpr(int *retType);
-void CallParamList(int callFuntionPos);
-
-int rangePos;
-int funtionPos;
+void CallParamList(int callPos);
 
 /*===========================================/
 - - - - - Utils - - - - - 
@@ -70,11 +67,11 @@ void program()
 
 void function()
 {
-  funtionPos = funcList.size();
+  funcPos = funcList.size();
   getsym();
   check(IDENT);
   if (!strcmp(token, "main")) 
-    funtionPos = 1;
+    funcPos = 1;
   else { 
     string str = token;
     if(findFun(str) >= 0) error(DUL_FUN,token);
@@ -88,7 +85,7 @@ void function()
   /*======= function_param_list =======*/
   if (symId == CONST_KW || symId == IDENT)
   {
-    vector<Var> tempParams;
+    vector<Var> params;
     do
     {
       if (symId == COMMA) getsym();
@@ -110,12 +107,12 @@ void function()
         tempParam.dataType = token;
       else
         error(UNMATCH_TYPE, token);
-      tempParams.push_back(tempParam);
+      params.push_back(tempParam);
       getsym();
     } while (symId == COMMA);
 
-    funcList[funtionPos].params = tempParams;
-    funcList[funtionPos].paramSlotNum = funcList[funtionPos].params.size();
+    funcList[funcPos].params = params;
+    funcList[funcPos].paramSlot = funcList[funcPos].params.size();
   }
 
   check(R_PAREN);
@@ -124,12 +121,12 @@ void function()
   getsym();
   check(IDENT);
   if (!strcmp(token, "int") || !strcmp(token, "void"))
-    funcList[funtionPos].retType = token;
+    funcList[funcPos].retType = token;
   else error(UNMATCH_TYPE, token);
 
   getsym();
   block_stmt(0);
-  Fun_instruction(funtionPos,0x49);
+  Fun_instruction(funcPos,0x49);
 }
 
 
@@ -140,16 +137,16 @@ void block_stmt(int upRange)
 {
   rangePos = rangeList.size();
   int savePos = rangePos;
-  rangeList.push_back(Range(funtionPos, upRange));
+  rangeList.push_back(Range(funcPos, upRange));
   check(L_BRACE);
 
   getsym();
   while (true)
   {
     if (symId == CONST_KW)
-      const_stmt(funtionPos,rangePos);
+      const_stmt(funcPos,rangePos);
     else if (symId == LET_KW)
-      let_stmt(funtionPos,rangePos);
+      let_stmt(funcPos,rangePos);
     else if (symId == IF_KW)
       if_stmt();
     else if (symId == WHILE_KW)
@@ -170,8 +167,8 @@ void block_stmt(int upRange)
       expr(&retType);
       if (retType != VOID_)
       {
-        Fun_instruction(funtionPos,0x03);
-        u32_instruction(1, funcList[funtionPos].instructions);
+        Fun_instruction(funcPos,0x03);
+        u32_instruction(1, funcList[funcPos].instruct);
       }
       check(SEMICOLON);
       getsym();
@@ -185,7 +182,7 @@ void block_stmt(int upRange)
 
 void const_stmt(int funPos, int rangePos_)
 {
-  funtionPos = funPos;
+  funcPos = funPos;
   rangePos = rangePos_;
   getsym();
   check(IDENT);
@@ -202,22 +199,22 @@ void const_stmt(int funPos, int rangePos_)
   int varPos = 0;
   
   checkDefine(rangePos,tempVar.name);
-  if(funtionPos == 0)
+  if(funcPos == 0)
     varPos = rangeList[0].vars.size();
   else 
-    varPos = funcList[funtionPos].localSlotNum++;
+    varPos = funcList[funcPos].varSlot++;
   rangeList[rangePos].vars.push_back(tempVar);
 
   getsym();
   check(ASSIGN);
 
-  if (funtionPos == 0) Fun_instruction(funtionPos,0x0c);
-  else  Fun_instruction(funtionPos,0x0a);
-  u32_instruction(varPos, funcList[funtionPos].instructions);
+  if (funcPos == 0) Fun_instruction(funcPos,0x0c);
+  else Fun_instruction(funcPos,0x0a);
+  u32_instruction(varPos, funcList[funcPos].instruct);
 
   getsym();
   expr(&retType);
-  Fun_instruction(funtionPos,0x17);
+  Fun_instruction(funcPos,0x17);
   
   check(SEMICOLON);
   getsym();
@@ -225,7 +222,7 @@ void const_stmt(int funPos, int rangePos_)
 
 void let_stmt(int funPos, int rangePos_)
 {
-  funtionPos = funPos;
+  funcPos = funPos;
   rangePos = rangePos_;
   getsym();
   check(IDENT);
@@ -243,25 +240,25 @@ void let_stmt(int funPos, int rangePos_)
   int varPos = 0;
 
   checkDefine(rangePos,tempVar.name);
-  if(funtionPos == 0)
+  if(funcPos == 0)
     varPos = rangeList[0].vars.size();
   else 
-    varPos = funcList[funtionPos].localSlotNum++;
+    varPos = funcList[funcPos].varSlot++;
   tempVar.funSlot = varPos;
   rangeList[rangePos].vars.push_back(tempVar);
 
   getsym();
   if (symId == ASSIGN)
   {
-    if (funtionPos == 0)
-      Fun_instruction(funtionPos,0x0c);
+    if (funcPos == 0)
+      Fun_instruction(funcPos,0x0c);
     else
-      Fun_instruction(funtionPos,0x0a);
-    u32_instruction(varPos, funcList[funtionPos].instructions);
+      Fun_instruction(funcPos,0x0a);
+    u32_instruction(varPos, funcList[funcPos].instruct);
 
     getsym();
     expr(&retType);
-    Fun_instruction(funtionPos,0x17);
+    Fun_instruction(funcPos,0x17);
     
   }
   check(SEMICOLON);
@@ -273,93 +270,93 @@ void if_stmt()
   int retType = ASSIGN_;
   getsym();
   expr(&retType);
-  Fun_instruction(funtionPos,0x43);
-  u32_instruction(1, funcList[funtionPos].instructions);
-  Fun_instruction(funtionPos,0x41);
-  int waitPos = funcList[funtionPos].instructions.size();
-  u32_instruction(0, funcList[funtionPos].instructions);
-  int ifLowNum = funcList[funtionPos].insNum;
+  Fun_instruction(funcPos,0x43);
+  u32_instruction(1, funcList[funcPos].instruct);
+  Fun_instruction(funcPos,0x41);
+  int wait = funcList[funcPos].instruct.size();
+  u32_instruction(0, funcList[funcPos].instruct);
+  int ifLeft = funcList[funcPos].insNum;
 
   block_stmt(rangePos);
-  int ifHighNum = funcList[funtionPos].insNum;
+  int right = funcList[funcPos].insNum;
 
   if (symId == ELSE_KW)
   {
-    Fun_instruction(funtionPos,0x41);
-    int waitPos = funcList[funtionPos].instructions.size();
-    u32_instruction(0, funcList[funtionPos].instructions);
-    int elseLowNum = funcList[funtionPos].insNum;
-    ifHighNum++;
+    Fun_instruction(funcPos,0x41);
+    int wait = funcList[funcPos].instruct.size();
+    u32_instruction(0, funcList[funcPos].instruct);
+    int elseLeft = funcList[funcPos].insNum;
+    right++;
 
     getsym();
     if (symId == IF_KW) if_stmt();
     else if (symId == L_BRACE) block_stmt(rangePos);
     else error(GRAMMER_ERROR, token);
 
-    int x = funcList[funtionPos].insNum - elseLowNum;
-    funcList[funtionPos].instructions[waitPos] = x>>24;
-    funcList[funtionPos].instructions[waitPos+1] = x>>16;
-    funcList[funtionPos].instructions[waitPos+2] = x>>8;
-    funcList[funtionPos].instructions[waitPos+3] = x;
+    int x = funcList[funcPos].insNum - elseLeft;
+    funcList[funcPos].instruct[wait] = x>>24;
+    funcList[funcPos].instruct[wait+1] = x>>16;
+    funcList[funcPos].instruct[wait+2] = x>>8;
+    funcList[funcPos].instruct[wait+3] = x;
   }
-  int x = ifHighNum - ifLowNum;
-  funcList[funtionPos].instructions[waitPos] = x>>24;
-  funcList[funtionPos].instructions[waitPos+1] = x>>16;
-  funcList[funtionPos].instructions[waitPos+2] = x>>8;
-  funcList[funtionPos].instructions[waitPos+3] = x;
+  int x = right - ifLeft;
+  funcList[funcPos].instruct[wait] = x>>24;
+  funcList[funcPos].instruct[wait+1] = x>>16;
+  funcList[funcPos].instruct[wait+2] = x>>8;
+  funcList[funcPos].instruct[wait+3] = x;
 
-  Fun_instruction(funtionPos,0x41);
-  u32_instruction(0, funcList[funtionPos].instructions);
+  Fun_instruction(funcPos,0x41);
+  u32_instruction(0, funcList[funcPos].instruct);
 }
 
 void while_stmt()
 {
   int retType = ASSIGN_;
-  Fun_instruction(funtionPos,0x41);
-  int whilePos = funcList[funtionPos].instructions.size();
-  u32_instruction(0, funcList[funtionPos].instructions);
-  int whileNum = funcList[funtionPos].insNum;
+  Fun_instruction(funcPos,0x41);
+  int whilePos = funcList[funcPos].instruct.size();
+  u32_instruction(0, funcList[funcPos].instruct);
+  int whileNum = funcList[funcPos].insNum;
   getsym();
   expr(&retType);
     
-  Fun_instruction(funtionPos,0x43);
-  u32_instruction(1, funcList[funtionPos].instructions);
+  Fun_instruction(funcPos,0x43);
+  u32_instruction(1, funcList[funcPos].instruct);
   
-  Fun_instruction(funtionPos,0x41);
-  int waitPos = funcList[funtionPos].instructions.size();
-  u32_instruction(0, funcList[funtionPos].instructions);
-  int tempNum = funcList[funtionPos].insNum;
+  Fun_instruction(funcPos,0x41);
+  int wait = funcList[funcPos].instruct.size();
+  u32_instruction(0, funcList[funcPos].instruct);
+  int tmp = funcList[funcPos].insNum;
 
   block_stmt(rangePos);
   
-  Fun_instruction(funtionPos,0x41);
-  u32_instruction(whileNum - funcList[funtionPos].insNum, funcList[funtionPos].instructions);
+  Fun_instruction(funcPos,0x41);
+  u32_instruction(whileNum - funcList[funcPos].insNum, funcList[funcPos].instruct);
   
-  int x = funcList[funtionPos].insNum - tempNum;
-  funcList[funtionPos].instructions[waitPos] = x>>24;
-  funcList[funtionPos].instructions[waitPos+1] = x>>16;
-  funcList[funtionPos].instructions[waitPos+2] = x>>8;
-  funcList[funtionPos].instructions[waitPos+3] = x;
+  int x = funcList[funcPos].insNum - tmp;
+  funcList[funcPos].instruct[wait] = x>>24;
+  funcList[funcPos].instruct[wait+1] = x>>16;
+  funcList[funcPos].instruct[wait+2] = x>>8;
+  funcList[funcPos].instruct[wait+3] = x;
 }
 
 void return_stmt()
 {
   getsym();
   if (symId != SEMICOLON){
-    Fun_instruction(funtionPos,0x0b);
-    u32_instruction(0, funcList[funtionPos].instructions);
+    Fun_instruction(funcPos,0x0b);
+    u32_instruction(0, funcList[funcPos].instruct);
     
     int retType = INT_;
-    if (funcList[funtionPos].retType != "int")
+    if (funcList[funcPos].retType != "int")
       error(RETURN_INT, token);
     expr(&retType);
-    Fun_instruction(funtionPos,0x17); 
+    Fun_instruction(funcPos,0x17); 
   }
   else{
-    if (funcList[funtionPos].retType != "void")
+    if (funcList[funcPos].retType != "void")
       error(RETURN_VOID, token);
   }
-  Fun_instruction(funtionPos,0x49);
+  Fun_instruction(funcPos,0x49);
   check(SEMICOLON);
   getsym();
 }
@@ -378,54 +375,54 @@ void expr(int *retType)
     {
       getsym();
       HighExpr(retType);
-      if (*retType == INT_) Fun_instruction(funtionPos,0x30);
-      else Fun_instruction(funtionPos,0x32);
-      Fun_instruction(funtionPos,0x39);
+      if (*retType == INT_) Fun_instruction(funcPos,0x30);
+      else Fun_instruction(funcPos,0x32);
+      Fun_instruction(funcPos,0x39);
       *retType = BOOL_;
     }
     else if (symId == LE)
     {
       getsym();
       HighExpr(retType);
-      if (*retType == INT_) Fun_instruction(funtionPos,0x30);
-      else Fun_instruction(funtionPos,0x32);
-      Fun_instruction(funtionPos,0x3a);
-      Fun_instruction(funtionPos,0x2e);
+      if (*retType == INT_) Fun_instruction(funcPos,0x30);
+      else Fun_instruction(funcPos,0x32);
+      Fun_instruction(funcPos,0x3a);
+      Fun_instruction(funcPos,0x2e);
       *retType = BOOL_;
     }
     else if (symId == GT)
     {
       getsym();
       HighExpr(retType);
-      if (*retType == INT_) Fun_instruction(funtionPos,0x30);
-      else Fun_instruction(funtionPos,0x32);
-      Fun_instruction(funtionPos,0x3a);
+      if (*retType == INT_) Fun_instruction(funcPos,0x30);
+      else Fun_instruction(funcPos,0x32);
+      Fun_instruction(funcPos,0x3a);
       *retType = BOOL_;
     }
     else if (symId == GE)
     {
       getsym();
       HighExpr(retType);
-      if (*retType == INT_) Fun_instruction(funtionPos,0x30);
-      else Fun_instruction(funtionPos,0x32);
-      Fun_instruction(funtionPos,0x39);
-      Fun_instruction(funtionPos,0x2e);
+      if (*retType == INT_) Fun_instruction(funcPos,0x30);
+      else Fun_instruction(funcPos,0x32);
+      Fun_instruction(funcPos,0x39);
+      Fun_instruction(funcPos,0x2e);
       *retType = BOOL_;
     }
     else if (symId == EQ)
     {
       getsym();
       HighExpr(retType);
-      if (*retType == INT_) Fun_instruction(funtionPos,0x30);
-      else Fun_instruction(funtionPos,0x32);
-      Fun_instruction(funtionPos,0x2e);
+      if (*retType == INT_) Fun_instruction(funcPos,0x30);
+      else Fun_instruction(funcPos,0x32);
+      Fun_instruction(funcPos,0x2e);
       *retType = BOOL_;
     }
     else if (symId == NEQ){
       getsym();
       HighExpr(retType);
-      if (*retType == INT_) Fun_instruction(funtionPos,0x30);
-      else Fun_instruction(funtionPos,0x32);  
+      if (*retType == INT_) Fun_instruction(funcPos,0x30);
+      else Fun_instruction(funcPos,0x32);  
       *retType = BOOL_;
     }
     else break;
@@ -441,7 +438,7 @@ void HighExpr(int *retType)
       getsym();
       MediumExpr(retType);
       if (*retType == INT_)
-        Fun_instruction(funtionPos,0x20);
+        Fun_instruction(funcPos,0x20);
       else
         error(RETURN_INT, token);
     }
@@ -449,7 +446,7 @@ void HighExpr(int *retType)
       getsym();
       MediumExpr(retType);
       if (*retType == INT_)
-        Fun_instruction(funtionPos,0x21);
+        Fun_instruction(funcPos,0x21);
       else
         error(RETURN_INT, token);
     }
@@ -466,13 +463,13 @@ void MediumExpr(int *retType)
       getsym();
       LowExpr(retType);
       if (*retType == INT_)
-        Fun_instruction(funtionPos,0x22);
+        Fun_instruction(funcPos,0x22);
     }
     else if (symId == DIV) {
       getsym();
       LowExpr(retType);
       if (*retType == INT_)
-        Fun_instruction(funtionPos,0x23);
+        Fun_instruction(funcPos,0x23);
     }
     else break;
   }
@@ -480,7 +477,8 @@ void MediumExpr(int *retType)
 
 void LowExpr(int *retType)
 {
-  int tempRangePos = rangePos ,i = -1;
+  int i = -1;
+  int saveRange = rangePos;
   if (symId == IDENT)
   {
     string preToken = token;
@@ -489,39 +487,35 @@ void LowExpr(int *retType)
     /*========== Function Call =========*/
     if (symId == L_PAREN)
     {
-      int callFuntionPos = findFun(preToken);
-      if(callFuntionPos<0) error(UNEXITED_FUN,token);
+      int callPos = findFun(preToken);
+      if(callPos<0) error(UNEXITED_FUN,token);
       
-      if (funcList[callFuntionPos].retType == "void")
-      {
+      if (funcList[callPos].retType == "void"){
         if (*retType != ASSIGN_ && *retType != VOID_)
           error(RETURN_VOID, token);
-        Fun_instruction(funtionPos,0x1a);
-        u32_instruction(0, funcList[funtionPos].instructions);
+        Fun_instruction(funcPos,0x1a);
+        u32_instruction(0, funcList[funcPos].instruct);
         
         if (*retType == ASSIGN_) *retType = VOID_;
       }
-      else if (funcList[callFuntionPos].retType == "int")
-      {
+      else if (funcList[callPos].retType == "int"){
         if (*retType != ASSIGN_ && *retType != INT_)
           error(RETURN_INT, token);
-        Fun_instruction(funtionPos,0x1a);
-        u32_instruction(1, funcList[funtionPos].instructions);
+        Fun_instruction(funcPos,0x1a);
+        u32_instruction(1, funcList[funcPos].instruct);
         
         if (*retType == ASSIGN_) *retType = INT_;
       }
 
       getsym();
-      if (symId == R_PAREN)
-      {
-        Fun_instruction(funtionPos,0x48);
-        u32_instruction(callFuntionPos, funcList[funtionPos].instructions);
+      if (symId == R_PAREN){
+        Fun_instruction(funcPos,0x48);
+        u32_instruction(callPos, funcList[funcPos].instruct);
       }
-      else
-      {
-        CallParamList(callFuntionPos);
-        Fun_instruction(funtionPos,0x48);
-        u32_instruction(callFuntionPos, funcList[funtionPos].instructions);
+      else{
+        CallParamList(callPos);
+        Fun_instruction(funcPos,0x48);
+        u32_instruction(callPos, funcList[funcPos].instruct);
         check(R_PAREN);
       }
       getsym();
@@ -534,89 +528,79 @@ void LowExpr(int *retType)
         error(RETURN_VOID, token);
       
       int varType = ASSIGN_;
-      bool local = false, param = false;
+      bool flag = false;
       //local vars
-      while (rangeList[tempRangePos].upRange != -1)
+      while (rangeList[saveRange].upRange != -1)
       {
-        i = findVar(tempRangePos,preToken,&varType,ASSIGN_);
+        i = findVar(saveRange,preToken,&varType,ASSIGN_);
         if(i!=-1){
-          int slot = rangeList[tempRangePos].vars[i].funSlot;
-          local = true;
-          Fun_instruction(funtionPos,0x0a);
-          u32_instruction(slot, funcList[funtionPos].instructions);
+          int slot = rangeList[saveRange].vars[i].funSlot;
+          flag = true;
+          Fun_instruction(funcPos,0x0a);
+          u32_instruction(slot, funcList[funcPos].instruct);
           break;
         }
-        tempRangePos = rangeList[tempRangePos].upRange;
+        saveRange = rangeList[saveRange].upRange;
       }
-      //fun params
-      if (!local)
-      {
-        i = findParam(funtionPos,preToken,&varType,ASSIGN_);
+      if (!flag) {//fun params
+        i = findParam(funcPos,preToken,&varType,ASSIGN_);
         if(i!=-1){
-          param = true;
-          Fun_instruction(funtionPos,0x0b);
-          if (funcList[funtionPos].retType == "void")
-            u32_instruction(i, funcList[funtionPos].instructions);
+          Fun_instruction(funcPos,0x0b);
+          if (funcList[funcPos].retType == "void")
+            u32_instruction(i, funcList[funcPos].instruct);
           else
-            u32_instruction(i + 1, funcList[funtionPos].instructions);
+            u32_instruction(i + 1, funcList[funcPos].instruct);
+        }
+        else { //global vars
+          i = findVar(0,preToken,&varType,ASSIGN_);
+          if(i!=-1){
+            Fun_instruction(funcPos,0x0c);
+            u32_instruction(i, funcList[funcPos].instruct);
+          }
+          else error(UNEXITED_VAR, token);
         }
       }
-      //global vars
-      if (!local && !param)
-      {
-        i = findVar(0,preToken,&varType,ASSIGN_);
-        if(i!=-1){
-          Fun_instruction(funtionPos,0x0c);
-          u32_instruction(i, funcList[funtionPos].instructions);
-        }
-        else error(UNEXITED_VAR, token);
-      }
-      
       getsym();
       expr(&varType);
       if (*retType == ASSIGN_) *retType = VOID_;
-      Fun_instruction(funtionPos,0x17);
+      Fun_instruction(funcPos,0x17);
       
     }
     /*========== Ident =========*/
     else
     {
-      bool local = false, param = false;
-
-      while (rangeList[tempRangePos].upRange != -1)
+      bool flag = false;
+      while (rangeList[saveRange].upRange != -1)
       {
-        i = findVar(tempRangePos,preToken,retType,LOAD_);
+        i = findVar(saveRange,preToken,retType,LOAD_);
         if(i != -1){
-          int slot = rangeList[tempRangePos].vars[i].funSlot;
-          local = true;
-          Fun_instruction(funtionPos,0x0a);
-          u32_instruction(slot, funcList[funtionPos].instructions);
+          int slot = rangeList[saveRange].vars[i].funSlot;
+          flag = true;
+          Fun_instruction(funcPos,0x0a);
+          u32_instruction(slot, funcList[funcPos].instruct);
           break;
         }
-        tempRangePos = rangeList[tempRangePos].upRange;
+        saveRange = rangeList[saveRange].upRange;
       }
-      if (!local)
-      {
-        i = findParam(funtionPos,preToken,retType,LOAD_);
+      if (!flag) {
+        i = findParam(funcPos,preToken,retType,LOAD_);
         if(i!=-1){
-          param = true;
-          Fun_instruction(funtionPos,0x0b);
-          if (funcList[funtionPos].retType == "void")
-            u32_instruction(i, funcList[funtionPos].instructions);
+          Fun_instruction(funcPos,0x0b);
+          if (funcList[funcPos].retType == "void")
+            u32_instruction(i, funcList[funcPos].instruct);
           else
-            u32_instruction(i + 1, funcList[funtionPos].instructions);
+            u32_instruction(i + 1, funcList[funcPos].instruct);
+        }
+        else {
+          i = findVar(0,preToken,retType,LOAD_);
+          if(i!=-1){
+            Fun_instruction(funcPos,0x0c);
+            u32_instruction(i, funcList[funcPos].instruct);
+          }
+          else error(UNEXITED_VAR, token);
         }
       }
-      if (!local && !param)
-      {
-        i = findVar(0,preToken,retType,LOAD_);
-        if(i!=-1){
-          Fun_instruction(funtionPos,0x0c);
-          u32_instruction(i, funcList[funtionPos].instructions);
-        }
-        else error(UNEXITED_VAR, token);
-      }
-      Fun_instruction(funtionPos,0x13);
+      Fun_instruction(funcPos,0x13);
     }
   }
   else if (symId == UINT_LITERAL)
@@ -624,8 +608,8 @@ void LowExpr(int *retType)
     if (*retType != ASSIGN_ && *retType != INT_)
       error(RETURN_INT, token);
     int64_t temp = atoi(token);
-    Fun_instruction(funtionPos,0x01);
-    u64_instruction(temp, funcList[funtionPos].instructions);
+    Fun_instruction(funcPos,0x01);
+    u64_instruction(temp, funcList[funcPos].instruct);
     
     if (*retType == ASSIGN_) *retType = INT_;
     getsym();
@@ -639,10 +623,10 @@ void LowExpr(int *retType)
     if (*retType != ASSIGN_ && *retType != INT_)
       error(RETURN_INT, token);
     Var temp = Var(token, "string", true);
-    int64_t tempNum = rangeList[0].vars.size();
+    int64_t tmp = rangeList[0].vars.size();
     rangeList[0].vars.push_back(temp);
-    funcList[0].instructions.push_back(0x01);
-    u64_instruction(tempNum, funcList[0].instructions);
+    funcList[0].instruct.push_back(0x01);
+    u64_instruction(tmp, funcList[0].instruct);
     funcList[0].insNum++;
     if (*retType == ASSIGN_) *retType = INT_;
     getsym();
@@ -651,9 +635,9 @@ void LowExpr(int *retType)
   {
     if (*retType != ASSIGN_ && *retType != INT_)
       error(RETURN_INT, token);
-    int64_t tempNum = token[0];
-    Fun_instruction(funtionPos,0x01);
-    u64_instruction(tempNum, funcList[funtionPos].instructions);
+    int64_t tmp = token[0];
+    Fun_instruction(funcPos,0x01);
+    u64_instruction(tmp, funcList[funcPos].instruct);
     
     if (*retType == ASSIGN_)
       *retType = INT_;
@@ -668,7 +652,7 @@ void LowExpr(int *retType)
     expr(&retT);
     if (retT == INT_)
     {
-      Fun_instruction(funtionPos,0x34);
+      Fun_instruction(funcPos,0x34);
       if (*retType == ASSIGN_) *retType = INT_;
     }
     else error(RETURN_INT, token);
@@ -693,7 +677,7 @@ void LowExpr(int *retType)
     
     getsym();
     check(R_PAREN);
-    Fun_instruction(funtionPos,0x50);
+    Fun_instruction(funcPos,0x50);
     
     if (*retType == ASSIGN_) *retType = INT_;
     getsym();
@@ -712,7 +696,7 @@ void LowExpr(int *retType)
     
     getsym();
     check(R_PAREN);
-    Fun_instruction(funtionPos,0x51);
+    Fun_instruction(funcPos,0x51);
     
     if (*retType == ASSIGN_) *retType = INT_;
     getsym();
@@ -730,7 +714,7 @@ void LowExpr(int *retType)
     expr(&retT);
     
     check(R_PAREN);
-    Fun_instruction(funtionPos,0x54);
+    Fun_instruction(funcPos,0x54);
     
     if (*retType == ASSIGN_) *retType = VOID_;
     getsym();
@@ -752,7 +736,7 @@ void LowExpr(int *retType)
     expr(&retT);
     
     check(R_PAREN);
-    Fun_instruction(funtionPos,0x55);
+    Fun_instruction(funcPos,0x55);
     
     if (*retType == ASSIGN_) *retType = VOID_;
     getsym();
@@ -769,14 +753,14 @@ void LowExpr(int *retType)
     if (symId != STRING_LITERAL)
       error(STR_ERROR,token);
     Var temp = Var(token, "string", true);
-    int64_t tempNum = rangeList[0].vars.size();
+    int64_t tmp = rangeList[0].vars.size();
     rangeList[0].vars.push_back(temp);
-    Fun_instruction(funtionPos,0x01);
-    u64_instruction(tempNum, funcList[funtionPos].instructions);
+    Fun_instruction(funcPos,0x01);
+    u64_instruction(tmp, funcList[funcPos].instruct);
     
     getsym();
     check(R_PAREN);
-    Fun_instruction(funtionPos,0x57);
+    Fun_instruction(funcPos,0x57);
     
     if (*retType == ASSIGN_) *retType = VOID_;
     getsym();
@@ -789,44 +773,40 @@ void LowExpr(int *retType)
     check(L_PAREN);
     getsym();
     check(R_PAREN);
-    Fun_instruction(funtionPos,0x58);
+    Fun_instruction(funcPos,0x58);
     
     if (*retType == ASSIGN_) *retType = VOID_;
     getsym();
   }
-  else
-    error(UNMATCH_IDENT, token);
-
+  else error(UNMATCH_IDENT, token);
   if(symId == AS_KW){
     error(UNDO,token);
   }
 }
 
-void CallParamList(int callFuntionPos)
+void CallParamList(int callPos)
 {
   int retType = ASSIGN_;
   expr(&retType);
   if (retType == INT_)
-    if (funcList[callFuntionPos].params[0].dataType != "int")
+    if (funcList[callPos].params[0].dataType != "int")
       error(RETURN_INT, token);
   else if (retType == VOID_)
-    if (funcList[callFuntionPos].params[0].dataType != "void")
+    if (funcList[callPos].params[0].dataType != "void")
       error(RETURN_VOID, token);
   else
     error(UNMATCH_TYPE, token);
   
-  int size = funcList[callFuntionPos].params.size();
-  for (int i = 1; i < size; ++i)
-  {
+  for (int i = 1; i < funcList[callPos].params.size(); ++i){
     check(COMMA);
     getsym();
     retType = ASSIGN_;
     expr(&retType);
     if (retType == INT_)
-      if (funcList[callFuntionPos].params[i].dataType != "int")
+      if (funcList[callPos].params[i].dataType != "int")
         error(RETURN_INT, token);
     else if (retType == VOID_)
-      if (funcList[callFuntionPos].params[i].dataType != "void")
+      if (funcList[callPos].params[i].dataType != "void")
         error(RETURN_VOID, token);
     else
       error(UNMATCH_TYPE, token);
@@ -839,71 +819,63 @@ void parse()
   program();
   init_end();
   
-  int VarNum = rangeList[0].vars.size() + funcList.size();
-  u32_instruction(VarNum, instructions);
+  u32_instruction(rangeList[0].vars.size() + funcList.size(), o0);
   for (int i = 0; i < rangeList[0].vars.size(); i++)
   {
-    if (rangeList[0].vars[i].dataType == "string")
-    {
-      instructions.push_back(0x01);
-      int arrayNum = rangeList[0].vars[i].name.size();
-      u32_instruction(arrayNum, instructions);
-      for (int j = 0; j < arrayNum; j++)
-        instructions.push_back(rangeList[0].vars[i].name[j]);
+    if (rangeList[0].vars[i].dataType == "string"){
+      o0.push_back(0x01);
+      u32_instruction(rangeList[0].vars[i].name.size(), o0); 
+      for (int j = 0; j < rangeList[0].vars[i].name.size(); j++)
+        o0.push_back(rangeList[0].vars[i].name[j]);
     }
-    else if (rangeList[0].vars[i].dataType == "int" || rangeList[0].vars[i].dataType == "double")
-    {
+    else if (rangeList[0].vars[i].dataType == "int"){
       if (rangeList[0].vars[i].is_const)
-        instructions.push_back(0x01);
-      else
-        instructions.push_back(0x00);
-      u32_instruction(8, instructions);
+        o0.push_back(0x01);
+      else o0.push_back(0x00);
+      u32_instruction(8, o0);
       for (int j = 0; j < 8; j++)
-        instructions.push_back(0x00);
+        o0.push_back(0x00);
     }
-    else{
-      error(UNMATCH_TYPE,token);
-    }
+    else error(UNMATCH_TYPE,token);
   }
   
   for (int i = 0; i < funcList.size(); i++)
   {
     funcList[i].pos = rangeList[0].vars.size() + i;
-    instructions.push_back(0x01);
+    o0.push_back(0x01);
     int arrayNum = funcList[i].name.size();
-    u32_instruction(arrayNum, instructions);
+    u32_instruction(arrayNum, o0);
     for (int j = 0; j < arrayNum; j++)
-      instructions.push_back(funcList[i].name[j]);
+      o0.push_back(funcList[i].name[j]);
   }
 
-  int funtionNum = funcList.size();
-  u32_instruction(funtionNum, instructions);
-  for (int i = 0; i < funtionNum; i++)
+  u32_instruction(funcList.size(), o0);
+  for (int i = 0; i < funcList.size(); i++)
   {
     int name = funcList[i].pos;
-    u32_instruction(name, instructions);
+    u32_instruction(name, o0);
     if (funcList[i].retType == "int")
-      u32_instruction(1, instructions);
+      u32_instruction(1, o0);
     else if (funcList[i].retType == "void")
-      u32_instruction(0, instructions);
+      u32_instruction(0, o0);
     else error(UNMATCH_TYPE,token);
 
-    u32_instruction(funcList[i].paramSlotNum, instructions);
-    u32_instruction(funcList[i].localSlotNum, instructions);
-    u32_instruction(funcList[i].insNum, instructions);
-    for (int j = 0; j < funcList[i].instructions.size(); j++)
-      instructions.push_back(funcList[i].instructions[j]);
+    u32_instruction(funcList[i].paramSlot, o0);
+    u32_instruction(funcList[i].varSlot, o0);
+    u32_instruction(funcList[i].insNum, o0);
+    for (int j = 0; j < funcList[i].instruct.size(); j++)
+      o0.push_back(funcList[i].instruct[j]);
   }
   
   string str;
-  for (int i = 0; i < instructions.size();i++)
+  for (int i = 0; i < o0.size();i++)
   {
-    str += instructions[i];
+    str += o0[i];
 
     int n = i+1;
     cout.width(2);
     cout.fill('0');
-    cout<<hex<<(int)instructions[i];
+    cout<<hex<<(int)o0[i];
     if(!(n%2) && n%16) cout<<' ';
     if(!(n%16)) cout<<'\n';
   }
