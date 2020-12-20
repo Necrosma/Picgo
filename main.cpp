@@ -18,7 +18,7 @@ int main(int argc,char** argv)
     if(src.tellg()<24) return -1;
     src.seekg(pos);  
 
-    tokens.open("tokens.txt", ios::out);
+    // tokens.open("tokens.txt", ios::out);
 
     getch();
     getsym();

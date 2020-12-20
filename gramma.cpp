@@ -24,7 +24,7 @@ void expr(int *retType);
 void HighExpr(int *retType);
 void MediumExpr(int *retType);
 void LowExpr(int *retType);
-void CallParamList(int callPos);
+void param(int callPos);
 
 /*===========================================/
 - - - - - Utils - - - - - 
@@ -51,6 +51,64 @@ bool isExpr()
 /*===========================================/
 - - - - - Functions - - - - - 
 /===========================================*/
+void parse()
+{
+  init_begin();
+  program();
+  init_end();
+  
+  u32_instruction(rangeList[0].vars.size() + funcList.size(), o0);
+  for (int i = 0; i < rangeList[0].vars.size(); i++)
+  {
+    if (rangeList[0].vars[i].dataType == "string"){
+      o0.push_back(0x01);
+      u32_instruction(rangeList[0].vars[i].name.size(), o0); 
+      for (int j = 0; j < rangeList[0].vars[i].name.size(); j++)
+        o0.push_back(rangeList[0].vars[i].name[j]);
+    }
+    else if (rangeList[0].vars[i].dataType == "int"){
+      if (rangeList[0].vars[i].is_const)
+        o0.push_back(0x01);
+      else o0.push_back(0x00);
+      u32_instruction(8, o0);
+      for (int j = 0; j < 8; j++)
+        o0.push_back(0x00);
+    }
+    else error(UNMATCH_TYPE,token);
+  }
+  
+  for (int i = 0; i < funcList.size(); i++)
+  {
+    funcList[i].pos = rangeList[0].vars.size() + i;
+    o0.push_back(0x01);
+    int arrayNum = funcList[i].name.size();
+    u32_instruction(arrayNum, o0);
+    for (int j = 0; j < arrayNum; j++)
+      o0.push_back(funcList[i].name[j]);
+  }
+
+  u32_instruction(funcList.size(), o0);
+  for (int i = 0; i < funcList.size(); i++)
+  {
+    int name = funcList[i].pos;
+    u32_instruction(name, o0);
+    if (funcList[i].retType == "int")
+      u32_instruction(1, o0);
+    else if (funcList[i].retType == "void")
+      u32_instruction(0, o0);
+    else error(UNMATCH_TYPE,token);
+
+    u32_instruction(funcList[i].paramSlot, o0);
+    u32_instruction(funcList[i].varSlot, o0);
+    u32_instruction(funcList[i].insNum, o0);
+    for (int j = 0; j < funcList[i].instruct.size(); j++)
+      o0.push_back(funcList[i].instruct[j]);
+  }
+  
+  for (int i = 0; i < o0.size();i++) out += o0[i];
+  fwrite(out.c_str(), out.size(), 1, outFile);
+}
+
 void program()
 {
   while (true)
@@ -513,7 +571,7 @@ void LowExpr(int *retType)
         u32_instruction(callPos, funcList[funcPos].instruct);
       }
       else{
-        CallParamList(callPos);
+        param(callPos);
         Fun_instruction(funcPos,0x48);
         u32_instruction(callPos, funcList[funcPos].instruct);
         check(R_PAREN);
@@ -784,7 +842,7 @@ void LowExpr(int *retType)
   }
 }
 
-void CallParamList(int callPos)
+void param(int callPos)
 {
   int retType = ASSIGN_;
   expr(&retType);
@@ -811,74 +869,4 @@ void CallParamList(int callPos)
     else
       error(UNMATCH_TYPE, token);
   }
-}
-
-void parse()
-{
-  init_begin();
-  program();
-  init_end();
-  
-  u32_instruction(rangeList[0].vars.size() + funcList.size(), o0);
-  for (int i = 0; i < rangeList[0].vars.size(); i++)
-  {
-    if (rangeList[0].vars[i].dataType == "string"){
-      o0.push_back(0x01);
-      u32_instruction(rangeList[0].vars[i].name.size(), o0); 
-      for (int j = 0; j < rangeList[0].vars[i].name.size(); j++)
-        o0.push_back(rangeList[0].vars[i].name[j]);
-    }
-    else if (rangeList[0].vars[i].dataType == "int"){
-      if (rangeList[0].vars[i].is_const)
-        o0.push_back(0x01);
-      else o0.push_back(0x00);
-      u32_instruction(8, o0);
-      for (int j = 0; j < 8; j++)
-        o0.push_back(0x00);
-    }
-    else error(UNMATCH_TYPE,token);
-  }
-  
-  for (int i = 0; i < funcList.size(); i++)
-  {
-    funcList[i].pos = rangeList[0].vars.size() + i;
-    o0.push_back(0x01);
-    int arrayNum = funcList[i].name.size();
-    u32_instruction(arrayNum, o0);
-    for (int j = 0; j < arrayNum; j++)
-      o0.push_back(funcList[i].name[j]);
-  }
-
-  u32_instruction(funcList.size(), o0);
-  for (int i = 0; i < funcList.size(); i++)
-  {
-    int name = funcList[i].pos;
-    u32_instruction(name, o0);
-    if (funcList[i].retType == "int")
-      u32_instruction(1, o0);
-    else if (funcList[i].retType == "void")
-      u32_instruction(0, o0);
-    else error(UNMATCH_TYPE,token);
-
-    u32_instruction(funcList[i].paramSlot, o0);
-    u32_instruction(funcList[i].varSlot, o0);
-    u32_instruction(funcList[i].insNum, o0);
-    for (int j = 0; j < funcList[i].instruct.size(); j++)
-      o0.push_back(funcList[i].instruct[j]);
-  }
-  
-  string str;
-  for (int i = 0; i < o0.size();i++)
-  {
-    str += o0[i];
-
-    int n = i+1;
-    cout.width(2);
-    cout.fill('0');
-    cout<<hex<<(int)o0[i];
-    if(!(n%2) && n%16) cout<<' ';
-    if(!(n%16)) cout<<'\n';
-  }
-
-  fwrite(str.c_str(), str.size(), 1, outFile);
 }

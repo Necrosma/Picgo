@@ -22,9 +22,9 @@ typedef struct VAR
 typedef struct RANGE
 {
   vector<Var> vars;
-  int funtionPos; //所属函数
+  int funcPos; //所属函数
   int upRange; //全局变量-1 函数0 逐增
-  RANGE(int funtionPos, int upRange) : vars(), funtionPos(funtionPos), upRange(upRange) {}
+  RANGE(int funcPos, int upRange) : vars(), funcPos(funcPos), upRange(upRange) {}
 } Range;
 
 typedef struct FUNTION
@@ -45,10 +45,10 @@ vector<Range> rangeList;
 vector<Funtion> funcList;
 vector<unsigned char> o0;
 
-void Fun_instruction(int funtionPos, int n)
+void Fun_instruction(int funcPos, int n)
 {
-  funcList[funtionPos].instruct.push_back(n);
-  funcList[funtionPos].insNum++;
+  funcList[funcPos].instruct.push_back(n);
+  funcList[funcPos].insNum++;
 }
 
 void u32_instruction(int x, vector<unsigned char> &instruct)
@@ -132,41 +132,41 @@ void checkVarType(Var var, int* retType)
   else error(UNMATCH_TYPE, token);
 }
 
-void checkDefine(int rangePos, string name){
-  for (int i = 0; i < rangeList[rangePos].vars.size(); i++)
-    if (rangeList[rangePos].vars[i].name == name)
+void checkDefine(int range, string name){
+  for (int i = 0; i < rangeList[range].vars.size(); i++)
+    if (rangeList[range].vars[i].name == name)
       error(DUL_VAR, token);
 }
 
 
-int findFun(string preToken)
+int findFun(string token)
 {
   for (int i = 1; i < funcList.size(); i++)
-    if (preToken == funcList[i].name)
+    if (token == funcList[i].name)
       return i;
   return -1;
 }
 
-int findVar(int tempRangePos, string preToken, int *retType, int isLoad)
+int findVar(int range, string token, int *retType, int isLoad)
 {
-  for (int i = 0; i < rangeList[tempRangePos].vars.size(); i++)
+  for (int i = 0; i < rangeList[range].vars.size(); i++)
   {
-    if (preToken == rangeList[tempRangePos].vars[i].name){
-      if(isLoad) checkVarType(rangeList[tempRangePos].vars[i],retType);
-      else setVarType(rangeList[tempRangePos].vars[i],retType);
+    if (token == rangeList[range].vars[i].name){
+      if(isLoad) checkVarType(rangeList[range].vars[i],retType);
+      else setVarType(rangeList[range].vars[i],retType);
       return i;
     }
   }
   return -1;
 }
 
-int findParam(int funtionPos, string preToken, int *retType, int isLoad)
+int findParam(int funcPos, string token, int *retType, int isLoad)
 {
-  for (int i = 0; i < funcList[funtionPos].params.size(); i++)
+  for (int i = 0; i < funcList[funcPos].params.size(); i++)
   {
-    if (preToken == funcList[funtionPos].params[i].name){
-      if(isLoad) checkVarType(funcList[funtionPos].params[i],retType);
-      else setVarType(funcList[funtionPos].params[i],retType);
+    if (token == funcList[funcPos].params[i].name){
+      if(isLoad) checkVarType(funcList[funcPos].params[i],retType);
+      else setVarType(funcList[funcPos].params[i],retType);
       return i;
     }
   }

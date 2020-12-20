@@ -67,6 +67,7 @@ int rangePos;
 int funcPos;
 char ch = ' ';
 string sym = "";
+string out = "";
 ifstream src;
 ofstream tokens;
 FILE *outFile = NULL;
