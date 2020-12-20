@@ -5,35 +5,31 @@
 #include <stdlib.h>
 using namespace std;
 
-#define FILEOPEN_ERROR -1 //file open failed
-#define ZEROSTART_ERROR 0 //
+#define FILEOPEN_ERROR -1
+#define ZEROSTART_ERROR 0 
 #define UNDEFFUNC_ERROR 1
-#define UNDEFCHAR_ERROR 2 //undefined IDEN
-#define UNMATCHSQ_ERROR 3 //右单引号不匹配
-#define UNMATCHDQ_ERROR 4 //右双引号不匹配
-#define DIGIT_LACK_ERROR 5 //数字为0位
-#define PRENOTONLY_ERROR 6 //!不能单独出现
-#define ESCAPE_QUENCE_ERROR 7 //转义符不完整
-#define COMMENT_FORMAT_ERROR 8 //注释格式错误
-#define COMMENT_LACK_ERROR 9 //注释为空
-#define UNMATCH_ERROR 10 //无匹配项
+#define UNDEFCHAR_ERROR 2
+#define UNMATCHSQ_ERROR 3 
+#define UNMATCHDQ_ERROR 4 
+#define DIGIT_LACK_ERROR 5
+#define PRENOTONLY_ERROR 6
+#define ESCAPE_QUENCE_ERROR 7
+#define COMMENT_FORMAT_ERROR 8
+#define COMMENT_LACK_ERROR 9 
+#define UNMATCH_ERROR 10
 #define RETURN_INT 11
 #define RETURN_VOID 12
 #define RETURN_BOOL 13
-
 #define UNEXITED_FUN 21
 #define UNEXITED_VAR 22
 #define UNMATCH_IDENT 23
 #define UNMATCH_TYPE 24
-
 #define EXPR_ERROR 31
 #define STR_ERROR 32
 #define GRAMMER_ERROR 33
-
 #define DUL_FUN 41
 #define DUL_VAR 42
-
-#define UNDO 99 // develop
+#define UNDO 99
 
 void error(int errorcode, char* token){
     cout << token << endl;

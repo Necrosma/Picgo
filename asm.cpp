@@ -9,53 +9,49 @@ using namespace std;
 #define VOID_ 3
 #define BOOL_ 4
 
-// 符号表 ===================
-typedef struct GLOBAL
+typedef struct VAR
 {
   string name;
   string dataType;
   bool is_const;
   int funSlot;
-  GLOBAL() : name(), dataType(), is_const() {}
-  GLOBAL(string name, string dataType, bool is_const) : name(name), dataType(dataType), is_const(is_const) {}
-} Global;
-typedef struct LOCAL
+  VAR() : name(), dataType(), is_const() {}
+  VAR(string name, string dataType, bool is_const) : name(name), dataType(dataType), is_const(is_const) {}
+} Var;
+typedef struct RANGE
 {
-  vector<Global> vars;
-  //所属函数
-  int funtionPos;
-  //全局变量-1 函数0 逐增
-  int upRange;
-  LOCAL(int funtionPos, int upRange) : vars(), funtionPos(funtionPos), upRange(upRange) {}
-} Local;
-vector<Local> Lmap;
+  vector<Var> vars;
+  int funtionPos; //所属函数
+  int upRange; //全局变量-1 函数0 逐增
+  RANGE(int funtionPos, int upRange) : vars(), funtionPos(funtionPos), upRange(upRange) {}
+} Range;
+vector<Range> rangeList;
 typedef struct FUNTION
 {
   int pos;
   int localSlotNum;
-  int paramSlotNum; //TODO:检查是否增加Num
+  int paramSlotNum;
   string name;
   string retType;
   int insNum;
   vector<unsigned char> instructions;
-  vector<Global> params;
+  vector<Var> params;
   FUNTION(string name) : pos(0), localSlotNum(0), paramSlotNum(0), name(name), retType(""), insNum(0), instructions(), params() {}
 } Funtion;
-vector<Funtion> Fmap;
+vector<Funtion> funcList;
 
 vector<unsigned char> instructions;
 
-//==============================
-void checkVarType(Global type, int* retType);
-void setVarType(Global param, int* retType);
-//==============================
-void intToFourBits(int x,unsigned char *str){
-    str[1]=x;
-    str[2]=x>>8;
-    str[3]=x>>16;
-    str[4]=x>>24;
-}
+//=========================================
+void checkVarType(Var type, int* retType);
+void setVarType(Var param, int* retType);
+//==========================================
 
+void Fun_instruction(int funtionPos, int n)
+{
+  funcList[funtionPos].instructions.push_back(n);
+  funcList[funtionPos].insNum++;
+}
 void u32_instruction(int x, vector<unsigned char> &instructions)
 {
   instructions.push_back(x>>24);
@@ -74,54 +70,89 @@ void u64_instruction(int64_t x, vector<unsigned char> &instructions)
   instructions.push_back(x>>8);
   instructions.push_back(x);
 }
-
-void init_start()
+void init_begin()
 {
-  //stackalloc(1)
-  Fmap[0].instructions.push_back(0x1a);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x01);
-  Fmap[0].insNum++;
-  //call(1)
-  Fmap[0].instructions.push_back(0x48);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x01);
-  Fmap[0].insNum++;
-  //popn(1)
-  Fmap[0].instructions.push_back(0x03);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x00);
-  Fmap[0].instructions.push_back(0x01);
-  Fmap[0].insNum++;
+  instructions.push_back(0x72);
+  instructions.push_back(0x30);
+  instructions.push_back(0x3b);
+  instructions.push_back(0x3e);
+  u32_instruction(1, instructions);
+  funcList.push_back(Funtion("_start"));
+  funcList[0].retType = "void";
+  funcList.push_back(Funtion("main"));
+  rangeList.push_back(Range(0, -1));
+}
+void init_end()
+{
+  
+  funcList[0].instructions.push_back(0x1a);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x01);
+  funcList[0].insNum++;
+  
+  funcList[0].instructions.push_back(0x48);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x01);
+  funcList[0].insNum++;
+  
+  funcList[0].instructions.push_back(0x03);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x00);
+  funcList[0].instructions.push_back(0x01);
+  funcList[0].insNum++;
 }
 
-void Fun_instruction(int funtionPos, int n)
-{
-  Fmap[funtionPos].instructions.push_back(n);
-  Fmap[funtionPos].insNum++;
+void setVarType(Var param, int* retType){
+  if (param.is_const)
+    error(99, token);
+  if (param.dataType == "int")
+    *retType = 1;
+  else error(UNMATCH_TYPE, token);
 }
+
+void checkVarType(Var var, int* retType)
+{
+  if (var.dataType == "int"){
+    if (*retType != ASSIGN_ && *retType != 1)
+      error(RETURN_INT, token);
+    if (*retType == ASSIGN_) *retType = 1;
+  }
+  else if (var.dataType == "void") {
+    if (*retType != ASSIGN_ && *retType != VOID_)
+      error(RETURN_VOID, token);
+    if (*retType == ASSIGN_) *retType = VOID_;
+  }
+  else error(UNMATCH_TYPE, token);
+}
+
+void checkDefine(int rangePos, string name){
+  for (int i = 0; i < rangeList[rangePos].vars.size(); i++)
+    if (rangeList[rangePos].vars[i].name == name)
+      error(DUL_VAR, token);
+}
+
+
 int findFun(string preToken)
 {
-  for (int i = 1; i < Fmap.size(); i++){
-    if (preToken == Fmap[i].name)
+  for (int i = 1; i < funcList.size(); i++)
+    if (preToken == funcList[i].name)
       return i;
-  }
   return -1;
 }
 
 int findVar(int tempRangePos, string preToken, int *retType, int isLoad)
 {
-  for (int i = 0; i < Lmap[tempRangePos].vars.size(); i++)
+  for (int i = 0; i < rangeList[tempRangePos].vars.size(); i++)
   {
-    if (preToken == Lmap[tempRangePos].vars[i].name)
+    if (preToken == rangeList[tempRangePos].vars[i].name)
     {
-      if(isLoad) checkVarType(Lmap[tempRangePos].vars[i],retType);
-      else setVarType(Lmap[tempRangePos].vars[i],retType);
+      if(isLoad) checkVarType(rangeList[tempRangePos].vars[i],retType);
+      else setVarType(rangeList[tempRangePos].vars[i],retType);
       return i;
     }
   }
@@ -130,59 +161,14 @@ int findVar(int tempRangePos, string preToken, int *retType, int isLoad)
 
 int findParam(int funtionPos, string preToken, int *retType, int isLoad)
 {
-  for (int i = 0; i < Fmap[funtionPos].params.size(); i++)
+  for (int i = 0; i < funcList[funtionPos].params.size(); i++)
   {
-    if (preToken == Fmap[funtionPos].params[i].name)
+    if (preToken == funcList[funtionPos].params[i].name)
     {
-      if(isLoad) checkVarType(Fmap[funtionPos].params[i],retType);
-      else setVarType(Fmap[funtionPos].params[i],retType);
+      if(isLoad) checkVarType(funcList[funtionPos].params[i],retType);
+      else setVarType(funcList[funtionPos].params[i],retType);
       return i;
     }
   }
   return -1;
-}
-
-void setVarType(Global param, int* retType){
-  if (param.is_const)
-    error(99, token);
-  if (param.dataType == "int")
-    *retType = 1;
-  else{
-    puts("setVarType ERROR");
-    error(99, token);
-  }
-}
-
-void checkVarType(Global var, int* retType)
-{
-  if (var.dataType == "int")
-  {
-    if (*retType != ASSIGN_ && *retType != 1){
-      puts("return isn't int");
-      error(99, token);
-    }
-    if (*retType == ASSIGN_)
-      *retType = 1;
-  }
-  else if (var.dataType == "void")
-  {
-    if (*retType != ASSIGN_ && *retType != VOID_){
-      puts("return isn't int");
-      error(99, token);
-    }
-    if (*retType == ASSIGN_)
-      *retType = VOID_;
-  }
-  else{
-    puts("checkType unreached ERROR");
-    error(99, token);
-  }
-}
-
-void checkDefine(int rangePos, string name){
-  for (int i = 0; i < Lmap[rangePos].vars.size(); i++)
-  {
-    if (Lmap[rangePos].vars[i].name == name)
-      error(99, token);
-  }
 }
