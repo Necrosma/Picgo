@@ -50,55 +50,25 @@ void checkVarType(Global type, int* retType);
 void setVarType(Global param, int* retType);
 //==============================
 
-void intToFourBits(int x, unsigned char *str)
+void u32_instruction(int x, vector<unsigned char> &instructions)
 {
-  str[1] = x;
-  str[2] = x >> 8;
-  str[3] = x >> 16;
-  str[4] = x >> 24;
-}
-void intToEightBits(int64_t x, unsigned char *str)
-{
-  str[1] = x;
-  str[2] = x >> 8;
-  str[3] = x >> 16;
-  str[4] = x >> 24;
-  str[5] = x >> 32;
-  str[6] = x >> 40;
-  str[7] = x >> 48;
-  str[8] = x >> 56;
-}
-void pushIns(int x, vector<unsigned char> &instructions)
-{
-  unsigned char str[5];
-  memset(str, 0, sizeof(str));
-  // intToFourBits(x, str);
   instructions.push_back(x>>24);
   instructions.push_back(x>>16);
   instructions.push_back(x>>8);
   instructions.push_back(x);
 }
-void pushIns(int64_t x, vector<unsigned char> &instructions)
+void u64_instruction(int64_t x, vector<unsigned char> &instructions)
 {
-  unsigned char str[9];
-  memset(str, 0, sizeof(str));
-  intToEightBits(x, str);
-  instructions.push_back(str[8]);
-  instructions.push_back(str[7]);
-  instructions.push_back(str[6]);
-  instructions.push_back(str[5]);
-  instructions.push_back(str[4]);
-  instructions.push_back(str[3]);
-  instructions.push_back(str[2]);
-  instructions.push_back(str[1]);
-}
-void pushIns(int16_t x, vector<unsigned char> &instructions)
-{
-  unsigned char str[3];
-  memset(str, 0, sizeof(str));
+  instructions.push_back(x>>56);
+  instructions.push_back(x>>48);
+  instructions.push_back(x>>40);
+  instructions.push_back(x>>32);
+  instructions.push_back(x>>24);
+  instructions.push_back(x>>16);
   instructions.push_back(x>>8);
   instructions.push_back(x);
 }
+
 void init_start()
 {
   //stackalloc(1)
@@ -124,7 +94,7 @@ void init_start()
   Fmap[0].insNum++;
 }
 
-void F_instruction(int funtionPos, int n)
+void Fun_instruction(int funtionPos, int n)
 {
   Fmap[funtionPos].instructions.push_back(n);
   Fmap[funtionPos].insNum++;
