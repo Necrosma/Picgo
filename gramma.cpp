@@ -12,19 +12,19 @@
 #include "asm.cpp"
 using namespace std;
 
-void parse();
-void program();
-void function();
-void block_stmt(int upRange);
-void let_stmt(int funPos, int rangePos_);
-void const_stmt(int funPos, int rangePos_);
-void if_stmt();
-void while_stmt();
-void return_stmt();
-void expr(int *retType);
-void HighExpr(int *retType);
-void MediumExpr(int *retType);
-void LowExpr(int *retType);
+void analyse();
+void Program();
+void Function();
+void BlockStmt(int upRange);
+void LetStmt(int funPos, int range);
+void ConstStmt(int funPos, int range);
+void IfStmt();
+void WhileStmt();
+void ReturnStmt();
+void Expression(int *retType);
+void ItemADD(int *retType);
+void ItemMUL(int *retType);
+void Factor(int *retType);
 void param(int callPos);
 
 /*===========================================/
@@ -52,10 +52,10 @@ bool isExpr()
 /*===========================================/
 - - - - - Functions - - - - - 
 /===========================================*/
-void parse()
+void analyse()
 {
   init_begin();
-  program();
+  Program();
   init_end();
   
   u32_instruction(rangeList[0].vars.size() + funcList.size(), o0);
@@ -68,7 +68,7 @@ void parse()
         o0.push_back(rangeList[0].vars[i].name[j]);
     }
     else if (rangeList[0].vars[i].dataType == "int"){
-      if (rangeList[0].vars[i].is_const)
+      if (rangeList[0].vars[i].const_)
         o0.push_back(0x01);
       else o0.push_back(0x00);
       u32_instruction(8, o0);
@@ -110,27 +110,25 @@ void parse()
   fwrite(out.c_str(), out.size(), 1, outFile);
 }
 
-void program()
+void Program()
 {
-  while (true)
-  {
+  while (true) {
     if (symId == FN_KW)
-      function();
+      Function();
     else if (symId == LET_KW)
-      let_stmt(0,0);
+      LetStmt(0,0);
     else if (symId == CONST_KW)
-      const_stmt(0,0);
+      ConstStmt(0,0);
     else break;
   }
 }
 
-void function()
+void Function()
 {
   funcPos = funcList.size();
   getsym();
   check(IDENT);
-  if (!strcmp(token, "main")) 
-    funcPos = 1;
+  if (!strcmp(token, "main")) funcPos = 1;
   else { 
     string str = token;
     if(findFun(str) >= 0) error(DUL_FUN,token);
@@ -150,9 +148,9 @@ void function()
       if (symId == COMMA) getsym();
       /*======= function_param =======*/
       Var tempParam;
-      tempParam.is_const = false;
+      tempParam.const_ = false;
       if (symId == CONST_KW){
-        tempParam.is_const = true;
+        tempParam.const_ = true;
         getsym();
       }
       check(IDENT);
@@ -184,7 +182,7 @@ void function()
   else error(UNMATCH_TYPE, token);
 
   getsym();
-  block_stmt(0);
+  BlockStmt(0);
   Fun_instruction(funcPos,0x49);
 }
 
@@ -192,7 +190,7 @@ void function()
 /*==========================================*
 - - - - - Statements - - - - - 
 *==========================================*/
-void block_stmt(int upRange)
+void BlockStmt(int upRange)
 {
   rangePos = rangeList.size();
   int savePos = rangePos;
@@ -200,32 +198,29 @@ void block_stmt(int upRange)
   check(L_BRACE);
 
   getsym();
-  while (true)
-  {
+  while (true) {
     if (symId == CONST_KW)
-      const_stmt(funcPos,rangePos);
+      ConstStmt(funcPos,rangePos);
     else if (symId == LET_KW)
-      let_stmt(funcPos,rangePos);
+      LetStmt(funcPos,rangePos);
     else if (symId == IF_KW)
-      if_stmt();
+      IfStmt();
     else if (symId == WHILE_KW)
-      while_stmt();
+      WhileStmt();
     else if (symId == BREAK_KW)
       error(UNDO,token);
     else if (symId == CONTINUE_KW)
       error(UNDO,token);
     else if (symId == RETURN_KW)
-      return_stmt();
+      ReturnStmt();
     else if (symId == SEMICOLON)
       getsym();
     else if (symId == L_BRACE)
-      block_stmt(rangePos);
-    else if (isExpr())
-    {
+      BlockStmt(rangePos);
+    else if (isExpr()) {
       int retType = ASSIGN_;
-      expr(&retType);
-      if (retType != VOID_)
-      {
+      Expression(&retType);
+      if (retType != VOID_){
         Fun_instruction(funcPos,0x03);
         u32_instruction(1, funcList[funcPos].instruct);
       }
@@ -239,10 +234,10 @@ void block_stmt(int upRange)
   getsym();
 }
 
-void const_stmt(int funPos, int rangePos_)
+void ConstStmt(int funPos, int range)
 {
   funcPos = funPos;
-  rangePos = rangePos_;
+  rangePos = range;
   getsym();
   check(IDENT);
   string preToken = token;
@@ -254,15 +249,15 @@ void const_stmt(int funPos, int rangePos_)
   if (!strcmp(token, "int")) retType = INT_;
   else error(RETURN_INT, token);
 
-  Var tempVar(preToken, token, true);
+  Var tmp(preToken, token, true);
   int varPos = 0;
   
-  checkDefine(rangePos,tempVar.name);
+  checkDefine(rangePos,tmp.name);
   if(funcPos == 0)
     varPos = rangeList[0].vars.size();
   else 
     varPos = funcList[funcPos].varSlot++;
-  rangeList[rangePos].vars.push_back(tempVar);
+  rangeList[rangePos].vars.push_back(tmp);
 
   getsym();
   check(ASSIGN);
@@ -272,17 +267,17 @@ void const_stmt(int funPos, int rangePos_)
   u32_instruction(varPos, funcList[funcPos].instruct);
 
   getsym();
-  expr(&retType);
+  Expression(&retType);
   Fun_instruction(funcPos,0x17);
   
   check(SEMICOLON);
   getsym();
 }
 
-void let_stmt(int funPos, int rangePos_)
+void LetStmt(int funPos, int range)
 {
   funcPos = funPos;
-  rangePos = rangePos_;
+  rangePos = range;
   getsym();
   check(IDENT);
   string preToken = token;
@@ -295,28 +290,25 @@ void let_stmt(int funPos, int rangePos_)
     retType = INT_;
   else
     error(RETURN_INT, token);
-  Var tempVar(preToken, token, false);
+  Var tmp(preToken, token, false);
   int varPos = 0;
 
-  checkDefine(rangePos,tempVar.name);
+  checkDefine(rangePos,tmp.name);
   if(funcPos == 0)
     varPos = rangeList[0].vars.size();
   else 
     varPos = funcList[funcPos].varSlot++;
-  tempVar.funSlot = varPos;
-  rangeList[rangePos].vars.push_back(tempVar);
+  tmp.funSlot = varPos;
+  rangeList[rangePos].vars.push_back(tmp);
 
   getsym();
-  if (symId == ASSIGN)
-  {
-    if (funcPos == 0)
-      Fun_instruction(funcPos,0x0c);
-    else
-      Fun_instruction(funcPos,0x0a);
+  if (symId == ASSIGN) {
+    if (funcPos == 0) Fun_instruction(funcPos,0x0c);
+    else Fun_instruction(funcPos,0x0a);
     u32_instruction(varPos, funcList[funcPos].instruct);
 
     getsym();
-    expr(&retType);
+    Expression(&retType);
     Fun_instruction(funcPos,0x17);
     
   }
@@ -324,11 +316,11 @@ void let_stmt(int funPos, int rangePos_)
   getsym();
 }
 
-void if_stmt()
+void IfStmt()
 {
   int retType = ASSIGN_;
   getsym();
-  expr(&retType);
+  Expression(&retType);
   Fun_instruction(funcPos,0x43);
   u32_instruction(1, funcList[funcPos].instruct);
   Fun_instruction(funcPos,0x41);
@@ -336,7 +328,7 @@ void if_stmt()
   u32_instruction(0, funcList[funcPos].instruct);
   int ifLeft = funcList[funcPos].insNum;
 
-  block_stmt(rangePos);
+  BlockStmt(rangePos);
   int right = funcList[funcPos].insNum;
 
   if (symId == ELSE_KW)
@@ -348,8 +340,8 @@ void if_stmt()
     right++;
 
     getsym();
-    if (symId == IF_KW) if_stmt();
-    else if (symId == L_BRACE) block_stmt(rangePos);
+    if (symId == IF_KW) IfStmt();
+    else if (symId == L_BRACE) BlockStmt(rangePos);
     else error(GRAMMER_ERROR, token);
 
     int x = funcList[funcPos].insNum - elseLeft;
@@ -368,7 +360,7 @@ void if_stmt()
   u32_instruction(0, funcList[funcPos].instruct);
 }
 
-void while_stmt()
+void WhileStmt()
 {
   int retType = ASSIGN_;
   Fun_instruction(funcPos,0x41);
@@ -376,7 +368,7 @@ void while_stmt()
   u32_instruction(0, funcList[funcPos].instruct);
   int whileNum = funcList[funcPos].insNum;
   getsym();
-  expr(&retType);
+  Expression(&retType);
     
   Fun_instruction(funcPos,0x43);
   u32_instruction(1, funcList[funcPos].instruct);
@@ -386,7 +378,7 @@ void while_stmt()
   u32_instruction(0, funcList[funcPos].instruct);
   int tmp = funcList[funcPos].insNum;
 
-  block_stmt(rangePos);
+  BlockStmt(rangePos);
   
   Fun_instruction(funcPos,0x41);
   u32_instruction(whileNum - funcList[funcPos].insNum, funcList[funcPos].instruct);
@@ -398,7 +390,7 @@ void while_stmt()
   funcList[funcPos].instruct[wait+3] = x;
 }
 
-void return_stmt()
+void ReturnStmt()
 {
   getsym();
   if (symId != SEMICOLON){
@@ -408,7 +400,7 @@ void return_stmt()
     int retType = INT_;
     if (funcList[funcPos].retType != "int")
       error(RETURN_INT, token);
-    expr(&retType);
+    Expression(&retType);
     Fun_instruction(funcPos,0x17); 
   }
   else{
@@ -425,15 +417,15 @@ void return_stmt()
 - - - - - Expression - - - - - 
 *==========================================*/
 
-void expr(int *retType)
+void Expression(int *retType)
 {
-  HighExpr(retType);
+  ItemADD(retType);
   while (true)
   {
     if (symId == LT)
     {
       getsym();
-      HighExpr(retType);
+      ItemADD(retType);
       if (*retType == INT_) Fun_instruction(funcPos,0x30);
       else Fun_instruction(funcPos,0x32);
       Fun_instruction(funcPos,0x39);
@@ -442,7 +434,7 @@ void expr(int *retType)
     else if (symId == LE)
     {
       getsym();
-      HighExpr(retType);
+      ItemADD(retType);
       if (*retType == INT_) Fun_instruction(funcPos,0x30);
       else Fun_instruction(funcPos,0x32);
       Fun_instruction(funcPos,0x3a);
@@ -452,7 +444,7 @@ void expr(int *retType)
     else if (symId == GT)
     {
       getsym();
-      HighExpr(retType);
+      ItemADD(retType);
       if (*retType == INT_) Fun_instruction(funcPos,0x30);
       else Fun_instruction(funcPos,0x32);
       Fun_instruction(funcPos,0x3a);
@@ -461,7 +453,7 @@ void expr(int *retType)
     else if (symId == GE)
     {
       getsym();
-      HighExpr(retType);
+      ItemADD(retType);
       if (*retType == INT_) Fun_instruction(funcPos,0x30);
       else Fun_instruction(funcPos,0x32);
       Fun_instruction(funcPos,0x39);
@@ -471,7 +463,7 @@ void expr(int *retType)
     else if (symId == EQ)
     {
       getsym();
-      HighExpr(retType);
+      ItemADD(retType);
       if (*retType == INT_) Fun_instruction(funcPos,0x30);
       else Fun_instruction(funcPos,0x32);
       Fun_instruction(funcPos,0x2e);
@@ -479,7 +471,7 @@ void expr(int *retType)
     }
     else if (symId == NEQ){
       getsym();
-      HighExpr(retType);
+      ItemADD(retType);
       if (*retType == INT_) Fun_instruction(funcPos,0x30);
       else Fun_instruction(funcPos,0x32);  
       *retType = BOOL_;
@@ -488,14 +480,14 @@ void expr(int *retType)
   }
 }
 
-void HighExpr(int *retType)
+void ItemADD(int *retType)
 {
-  MediumExpr(retType);
+  ItemMUL(retType);
   while (true)
   {
     if (symId == PLUS){
       getsym();
-      MediumExpr(retType);
+      ItemMUL(retType);
       if (*retType == INT_)
         Fun_instruction(funcPos,0x20);
       else
@@ -503,7 +495,7 @@ void HighExpr(int *retType)
     }
     else if (symId == MINUS){
       getsym();
-      MediumExpr(retType);
+      ItemMUL(retType);
       if (*retType == INT_)
         Fun_instruction(funcPos,0x21);
       else
@@ -513,20 +505,20 @@ void HighExpr(int *retType)
   }
 }
 
-void MediumExpr(int *retType)
+void ItemMUL(int *retType)
 {
-  LowExpr(retType);
+  Factor(retType);
   while (true)
   {
     if (symId == MUL) {
       getsym();
-      LowExpr(retType);
+      Factor(retType);
       if (*retType == INT_)
         Fun_instruction(funcPos,0x22);
     }
     else if (symId == DIV) {
       getsym();
-      LowExpr(retType);
+      Factor(retType);
       if (*retType == INT_)
         Fun_instruction(funcPos,0x23);
     }
@@ -534,7 +526,7 @@ void MediumExpr(int *retType)
   }
 }
 
-void LowExpr(int *retType)
+void Factor(int *retType)
 {
   int i = -1;
   int saveRange = rangePos;
@@ -588,7 +580,7 @@ void LowExpr(int *retType)
       
       int varType = ASSIGN_;
       bool flag = false;
-      //local vars
+
       while (rangeList[saveRange].upRange != -1)
       {
         i = findVar(saveRange,preToken,&varType,ASSIGN_);
@@ -601,7 +593,7 @@ void LowExpr(int *retType)
         }
         saveRange = rangeList[saveRange].upRange;
       }
-      if (!flag) {//fun params
+      if (!flag) {
         i = findParam(funcPos,preToken,&varType,ASSIGN_);
         if(i!=-1){
           Fun_instruction(funcPos,0x0b);
@@ -610,7 +602,7 @@ void LowExpr(int *retType)
           else
             u32_instruction(i + 1, funcList[funcPos].instruct);
         }
-        else { //global vars
+        else {
           i = findVar(0,preToken,&varType,ASSIGN_);
           if(i!=-1){
             Fun_instruction(funcPos,0x0c);
@@ -620,7 +612,7 @@ void LowExpr(int *retType)
         }
       }
       getsym();
-      expr(&varType);
+      Expression(&varType);
       if (*retType == ASSIGN_) *retType = VOID_;
       Fun_instruction(funcPos,0x17);
       
@@ -708,9 +700,8 @@ void LowExpr(int *retType)
       error(RETURN_INT, token);
     getsym();
     int retT = ASSIGN_;
-    expr(&retT);
-    if (retT == INT_)
-    {
+    Expression(&retT);
+    if (retT == INT_){
       Fun_instruction(funcPos,0x34);
       if (*retType == ASSIGN_) *retType = INT_;
     }
@@ -720,7 +711,7 @@ void LowExpr(int *retType)
   {
     getsym();
     if (isExpr())
-      expr(retType);
+      Expression(retType);
     else
       error(EXPR_ERROR, token);
     check(R_PAREN);
@@ -770,7 +761,7 @@ void LowExpr(int *retType)
     check(L_PAREN);
     
     getsym();
-    expr(&retT);
+    Expression(&retT);
     
     check(R_PAREN);
     Fun_instruction(funcPos,0x54);
@@ -792,7 +783,7 @@ void LowExpr(int *retType)
     check(L_PAREN);
     
     getsym();
-    expr(&retT);
+    Expression(&retT);
     
     check(R_PAREN);
     Fun_instruction(funcPos,0x55);
@@ -846,7 +837,7 @@ void LowExpr(int *retType)
 void param(int callPos)
 {
   int retType = ASSIGN_;
-  expr(&retType);
+  Expression(&retType);
   if (retType == INT_)
     if (funcList[callPos].params[0].dataType != "int")
       error(RETURN_INT, token);
@@ -860,7 +851,7 @@ void param(int callPos)
     check(COMMA);
     getsym();
     retType = ASSIGN_;
-    expr(&retType);
+    Expression(&retType);
     if (retType == INT_)
       if (funcList[callPos].params[i].dataType != "int")
         error(RETURN_INT, token);

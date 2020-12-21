@@ -22,7 +22,7 @@ int main(int argc,char** argv)
 
     getch();
     getsym();
-    parse();
+    analyse();
 
     tokens.close();
     src.close();

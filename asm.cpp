@@ -13,10 +13,10 @@ typedef struct VAR
 {
   string name;
   string dataType;
-  bool is_const;
+  bool const_;
   int funSlot;
-  VAR() : name(), dataType(), is_const() {}
-  VAR(string name, string dataType, bool is_const) : name(name), dataType(dataType), is_const(is_const) {}
+  VAR() : name(), dataType(), const_(), funSlot() {}
+  VAR(string name, string dataType, bool const_) : name(name), dataType(dataType), const_(const_), funSlot() {}
 } Var;
 
 typedef struct RANGE
@@ -110,7 +110,7 @@ void init_end()
 }
 
 void setVarType(Var param, int* retType){
-  if (param.is_const)
+  if (param.const_)
     error(99, token);
   if (param.dataType == "int")
     *retType = 1;
